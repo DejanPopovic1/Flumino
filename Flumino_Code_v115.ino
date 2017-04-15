@@ -1,21 +1,15 @@
-//------Library------------------------------
 #include <Adafruit_GFX.h>
 #include <Adafruit_SharpMem.h>
 #include <SPI.h>
-//-------Define-----------------------------
 #define SCK                      5
 #define MOSI                     6
 #define SS                       7
 #define BLACK                    0
 #define WHITE                    1
-#define CONTACT_THRESHOLD        900
-#define TOUCH_THRESHOLD          999
-#define ON                       1
-#define OFF                      0
 #define DISPLAY_PERIOD           2000000
-//#define MILLILITRES_PER_DROP 20
+#define MAXIMUM_CYCLE_TIME       20000
+#define SENSOR_THRESHOLD 600
 Adafruit_SharpMem display(SCK, MOSI, SS);  //For the SPI BUS
-//------------Variables-----------------------//
 
 enum menu_page
 {
@@ -31,74 +25,23 @@ enum menu_page
 };
 
 int Menu;
-//-------------States-//
-int buttonPushCounter          = 0;   // counter for the number of button presses
-int buttonState                = 0;         // current state of the button
-int lastButtonState            = 0;     // previous state of the button
-int LastbuttonPushCounter      = 0;
-//---------------FLOW-Variables----------------
-float SetFlowRate              = 0;
-int state                      = 1013;
-int lastState                  = 1013;
-float timelatest       = 0;
-float timelatest2 = 0;
-
+int previoiusSensorReading            = 0;     // previous state of the button
 float FlowRate                 = 180;
 float DisplayedFlowRate;
 float DrugFlowRate             = 0;
-float timeoldest       = 0;
-float period           = 0;
-int i;
-int touch_state                = 0;
-int touch_lastState            = 0;
-unsigned long touch_timelatest = 0;
-unsigned long touch_timeoldest = 0;
-unsigned long buzzer_time      = 0;
-int millilitres_per_drop       = 20;
+unsigned long period           = 0;
+int dropsPerMillilitre       = 20;
 int show_dose                  = false;
 int dose_shown                 = 1;
-int set_alarm_flow = 0;
 float lower_sound_thresh = 0;
 float upper_sound_thresh = 0;
 float lower_drugsound_thresh = 0;
 float upper_drugsound_thresh = 0;
-int FlowField = 0;
-//------------------------------------------
-
-float  period2 = 1;
-float      dph = 1;
-float      mpd = 1 ;
-//------------------------------------------
-// Variables will change:
-int DigitalReading             = 0;
-int inPin                      = 7;         // the number of the input pin
+int sensorReading             = 0;
 int IROutPin                   = 12;         // the number of the input pin
-int outPin                     = 13;       // the number of the output pin
-int counter                    = 0;       // how many times we have seen new value
-int reading;           // the current value read from the input pin
-int current_state              = LOW;    // the debounced input value// the following variable is a long because the time, measured in milliseconds,// will quickly become a bigger number than can be stored in an int.
-int times                      = 0;         // the last time the output pin was sampled
-int debounce_count             = 3; // number of millis/samples to consider before declaring a debounced input
-//----------Variables-Declarelations-----
-int a                          = 2;   //declaring integer
 const int analogInPin          = A1;  // Analog input pin that the potentiometer is attached to
-const int analogOutPin         = 9; // Analog output pin that the LED is attached to
+const int BuzzerPin            = 3;
 
-float sensorValue              = 0;        // value read from the pot
-int outputValue                = 0;        // value output to the PWM (analog out)
-int BuzzerPin                  = 3;
-//-------Signal-Testing-----//
-int y, countz, newcountz;
-int lastcountz                 = 0;
-double stddev1;
-double AdThres;
-double Average;
-int peakValue                  = 0;
-float filterVal;       // this determines smoothness  - .0001 is max  1 is off (no smoothing)
-float smoothedVal;     // this holds the last loop value just use a unique variable for every different sensor that needs smoothing
-float smoothedVal2;   // this would be the buffer value for another sensor if you needed to smooth two different sensors - not used in this sketch
-float AmpedSmoothedVal;
-int mainPeak;
 //------Button-1-Code-----------------
 const int Button1InPin      = A0;  // Analog input pin that the potentiometer is attached to
 int Button1                 = 0;        // value read from the button
@@ -136,23 +79,16 @@ int Case5Count       = 12;
 int Case2editCount   = 1;
 int Case3editCount   = 1;
 //----------------Exponential-Smoothing-----//
-float alpha = 0.25;
-float AverageFlowRate = 180;
+double AverageFlowRate = 180;
 int BuzzerState = 0;
-
-
-
-//==========================================================//
-//=================Setup=CODE===============================//
-//==========================================================//
+float newFlowRate = 0;
+unsigned long previousTime = 0;
 
 void setup()
 {
   //------------Initialize Display------------//
   display.begin();
   //--------------------------------------
-  //countz = 0;
-
   char b[2];   //declaring character array
   String str;  //declaring string
   Serial.begin(9600);
@@ -163,54 +99,51 @@ void setup()
   pinMode(IROutPin, OUTPUT); //Infrared LED
   //---------------------------------------
 }
-
-unsigned long current_time_beginning_loop;
-unsigned long current_time_ending_loop;
-
-//==========================================================//
-//=================LOOP=CODE===============================//
-//==========================================================//
+unsigned long currentTime;
 
 void loop()
 {
-  
-current_time_beginning_loop = micros();
-  
-//Serial.println(micros());
-
+  currentTime = micros();
   //-S-1.0------------Analog Read-------------------//
   digitalWrite(12, HIGH);   // turn the LED on (HIGH is the voltage level)
-
-  sensorValue = analogRead(analogInPin);
   delayMicroseconds(1);
   //digitalWrite(12, LOW);   // turn the LED on (HIGH is the voltage level)
-  //---------------Filters-----------------------//
-  smoothedVal =  sensorValue;
-  AmpedSmoothedVal = smoothedVal;
-  AdThres = 600;  // Main Parameter- Set threshold Value;
   //-------Logical-Sensing-----------------------//
-
-  if (sensorValue >= AdThres) //Threshold
+  if (analogRead(analogInPin) >= SENSOR_THRESHOLD) //Threshold
   {
-    DigitalReading = HIGH;
+    sensorReading = HIGH;
   }
   else
   {
-    DigitalReading = LOW;
+    sensorReading = LOW;
   }
-  digitalWrite(13, DigitalReading );   // turn the LED on (HIGH is the voltage level)
   //----------State-Machine---------------------
-
-  buttonState = DigitalReading;
-  if (buttonState != lastButtonState) {
-    if (buttonState == HIGH) {
-      buttonPushCounter++;
-    }
-    else {
-    }
+  
+  bool isDropPassing = false;
+  if (previoiusSensorReading == HIGH && sensorReading == LOW)
+  {
+    isDropPassing = true;
   }
-  lastButtonState = buttonState;
+  else
+  {
+    isDropPassing = false;
+  }
+  previoiusSensorReading = sensorReading;
 
+  if(isDropPassing == true)
+  {
+    newFlowRate = flowRate(&previousTime, currentTime, 20, &AverageFlowRate, &period);
+  }
+  if(currentTime >= previousTime + period)
+  {
+    newFlowRate = decayedFlowRate(previousTime, currentTime, 20, period);
+  }
+  if (currentTime % DISPLAY_PERIOD <= MAXIMUM_CYCLE_TIME) {
+    DisplayedFlowRate = newFlowRate;
+  }
+
+  
+  
   //===============Button1=Code=========//
   Button1 = analogRead(Button1InPin);
   button1State = Button1;
@@ -251,13 +184,11 @@ current_time_beginning_loop = micros();
     else if (Menu == drug_mass_page && Case1Count == 0)
       if (Case2CountUg >= 100)
         Case2CountUg = 0;
-        
-        else if (micros() - button2initialtime >= 1000000){
-          Serial.println("Beep");
-          //Case2CountUg = Case2CountUg + 10;
-          //button2initialtime = micros();
-        }
-        
+
+      else if (micros() - button2initialtime >= 1000000) {
+        Serial.println("Beep");
+      }
+
       else
         Case2CountUg++;
 
@@ -318,9 +249,6 @@ current_time_beginning_loop = micros();
       else
         Case1Count--;
 
-
-
-
     else if (Menu == 5 && Case1Count == 0)
       if (Case2CountUg == 0)
         Case2CountUg = 100;
@@ -367,27 +295,23 @@ current_time_beginning_loop = micros();
   }
   lastButton3State = button3State;
 
-
-
-
   //===============Button4=Code=========//
   Button4 = digitalRead(Button4InPin);
   button4State = Button4;
   if (button4State != lastButton4State && button4State == LOW) {
-    
+
     if (BuzzerState == 0)
-        BuzzerState = 1 ;
+      BuzzerState = 1 ;
     else
-        BuzzerState = 0 ;  
+      BuzzerState = 0 ;
 
-      lower_sound_thresh = AverageFlowRate * (1 - (float)Case5Count / 100);
-      upper_sound_thresh = AverageFlowRate * (1 + (float)Case5Count / 100);
-      lower_drugsound_thresh = DrugFlowRate * (1 - (float)Case5Count / 100);
-      upper_drugsound_thresh = DrugFlowRate * (1 + (float)Case5Count / 100);
-    }
-    lastButton4State = button4State;
+    lower_sound_thresh = AverageFlowRate * (1 - (float)Case5Count / 100);
+    upper_sound_thresh = AverageFlowRate * (1 + (float)Case5Count / 100);
+    lower_drugsound_thresh = DrugFlowRate * (1 - (float)Case5Count / 100);
+    upper_drugsound_thresh = DrugFlowRate * (1 + (float)Case5Count / 100);
+  }
+  lastButton4State = button4State;
 
- 
   //------------------------------------------------//
   if (BuzzerState == 1 )
   {
@@ -405,64 +329,20 @@ current_time_beginning_loop = micros();
     digitalWrite(BuzzerPin, LOW );
   }
 
-
-
-
-
-
-  //-----------------------------------------------------Internal Variables------------------//
-  //-----------------------------------------------------Internal Variables------------------//
-  //-----------------------------------------------------Internal Variables------------------//
   switch (Case0Count) {
     case 0:
-      millilitres_per_drop = 10;
+      dropsPerMillilitre = 10;
       break;
     case 1:
-      millilitres_per_drop = 20;
+      dropsPerMillilitre = 20;
       break;
     case 2:
-      millilitres_per_drop = 60;
+      dropsPerMillilitre = 60;
       break;
   }
-
-
-
-
-
-
-
-  //-----------------------------------------------------Internal Variables------------------//
-  //-----------------------------------------------------Internal Variables------------------//
-  //-----------------------------------------------------Internal Variables------------------//
-
-
   //-S1.1------Drip Logic----------
 
-  
-  if (buttonPushCounter != LastbuttonPushCounter)
-  {
-    CalculateFlowRate();
-    timelatest2 = timelatest;
-  }
-      LastbuttonPushCounter = buttonPushCounter;
-  
-  if(current_time_beginning_loop >= timelatest2 + period){
-    timelatest2 = current_time_beginning_loop;
-    CalculateDecayedFlowRate();
-    }
 
-  if (current_time_beginning_loop % DISPLAY_PERIOD <= DISPLAY_PERIOD/100){
-  DisplayedFlowRate = AverageFlowRate;
-    }
-
-
-
-
-
-
-
-  
-  //FlowRate = 180;
   if (Case1Count == 0 && dose_shown == 0)
     DrugFlowRate = (Case2CountUg * FlowRate) / (Case4Count * 60 * Case3Count) * 1000 ;
   else if (Case1Count == 0 && dose_shown == 1)
@@ -476,36 +356,6 @@ current_time_beginning_loop = micros();
   else if (Case1Count == 1 && dose_shown == 2)
     DrugFlowRate = (Case2CountMg * FlowRate) / (Case4Count * 60 * Case3Count);
 
-
-  //------------DEBUG--------------//
-
-//  Serial.print(sensorValue);
-//  Serial.print(">");
-//  Serial.print(AverageFlowRate);
-//  Serial.print("<");
-//  Serial.print(DigitalReading);
-//  Serial.print("%");
-//  Serial.print(FlowRate);
-//  Serial.print(",");
-//  Serial.println();
-//  Serial.println(micros());
-//  
-//  
-//  Serial.print(micros());
-//  Serial.print("    ");
-//  Serial.print(timeoldest);
-//  Serial.print("    ");
-//  Serial.print(timelatest);
-//  Serial.println("");  
-  Serial.println(sensorValue);   
-  Serial.println(micros());  
-  Serial.println("");
-  //------------------------------//
-
-
-  //-S-2.0------------Convert-to-String-------------//
-
-  //-S-3.0------------LCD-Display-------------------//
   //-S-3.1-----Setup-LCD----------//
   display.clearDisplay();
   Menu = button1PushCounter;
@@ -549,7 +399,6 @@ current_time_beginning_loop = micros();
       display.refresh();
       break;
 
-
     case allowable_flow_rate_deviation_page:
       display.setTextSize(1);
       display.setTextColor(WHITE, BLACK); // 'inverted' text
@@ -561,36 +410,10 @@ current_time_beginning_loop = micros();
       display.setTextColor(WHITE, BLACK); // 'inverted' text
       display.setTextSize(2);
       display.print(Case5Count);
-//      display.println("");
-//      display.println("");
-//      display.setTextSize(1);
-//      display.println("Alarm State: ");
-//      if (BuzzerState == 1) {
-//        display.setTextColor(BLACK);
-//        display.print("ON");
-//        display.print("  ");
-//        display.setTextColor(WHITE);
-//        display.println("OFF");
-//        
-//        display.println(" ");
-//      }
-//      else {
-//        display.setTextColor(WHITE);
-//        display.print("ON");
-//        display.print("  ");
-//        display.setTextColor(BLACK);
-//        display.println(" OFF ");
-//        display.setTextColor(BLACK);
-//        display.println(" ");
-//      }
-
       display.refresh();
-
       break;
-
-
+      
     case input_dosage_y_n_page:
-
       display.setTextSize(1);
       display.setTextColor(WHITE, BLACK);
       display.setCursor(0, 0);
@@ -631,13 +454,10 @@ current_time_beginning_loop = micros();
       }
       else
         ;
-
       display.refresh();
       break;
 
-
     case display_dosage_UOM_page:
-
       display.setTextSize(1);
       display.setTextColor(WHITE, BLACK);
       display.setCursor(0, 0);
@@ -669,7 +489,6 @@ current_time_beginning_loop = micros();
         display.setTextColor(BLACK, WHITE);
         display.print(" ");
 
-
         if (dose_shown == 0) {
           display.setTextColor(WHITE, BLACK);
           display.println("ng/kg/min");
@@ -681,7 +500,6 @@ current_time_beginning_loop = micros();
           display.print(" ");
           display.println("mg/kg/min");
         }
-
 
         else if (dose_shown == 1) {
           display.println("ng/kg/min");
@@ -695,7 +513,6 @@ current_time_beginning_loop = micros();
           display.println("mg/kg/min");
         }
 
-
         else if (dose_shown == 2) {
           display.println("ng/kg/min");
           display.println(" ");
@@ -707,19 +524,11 @@ current_time_beginning_loop = micros();
           display.println("mg/kg/min");
           display.setTextColor(BLACK, WHITE);
         }
-
-
       }
       else
         ;
-
       display.refresh();
-
       break;
-
-
-
-
 
     case input_drug_mass_UOM_page:
       display.setTextSize(1);
@@ -743,29 +552,18 @@ current_time_beginning_loop = micros();
       else
         display.println("2) mg");
       display.println("");
-
-
-
       display.setTextColor(WHITE, BLACK);
       display.println("    Drug Mass   ");
       //display.println("");
       display.setTextColor(BLACK);
       display.print("   ");
       display.setTextSize(2);
-
-
-
-
       if (Case1Count == 0)
         display.println(Case2CountUg);
       else
         display.println(Case2CountMg);
-
       display.refresh();
-
-
       break;
-
 
     case drug_mass_page:
       display.setTextSize(1);
@@ -809,9 +607,7 @@ current_time_beginning_loop = micros();
       // Serial.println();
       display.refresh();
 
-
       break;
-
 
     case patient_mass_page:
       display.setTextSize(1);
@@ -827,25 +623,14 @@ current_time_beginning_loop = micros();
       display.println(Case3Count);
       display.setTextSize(1);
       display.println("");
-      // display.println(" <0.1-500kg>");
-      // display.println("");
-
-
-
       display.setTextColor(WHITE, BLACK); // 'inverted' text
       display.println("Volume Dilutent       (ml)      ");
       display.setTextColor(BLACK);
-
       display.setTextSize(2);
       display.print(" ");
       display.println(Case4Count);
       display.println("");
-
       display.refresh();
-
-
-      //        setBitmap(mass); // Show Drop BMP to LCD
-
       break;
 
     case volume_dilutent_page:
@@ -865,26 +650,17 @@ current_time_beginning_loop = micros();
       // display.println(" <0.1-500kg>");
       // display.println("");
 
-
-
       display.setTextColor(WHITE, BLACK); // 'inverted' text
       display.println("Volume Dilutent       (ml)      ");
       display.setTextColor(BLACK);
-
       display.setTextSize(2);
       display.print(" ");
       display.setTextColor(WHITE, BLACK); // 'inverted' text
       display.println(Case4Count);
       display.println("");
-
       display.refresh();
 
-
       break;
-
-
-
-
     case flow_rate_page:
       display.setTextSize(1);
       display.setTextColor(WHITE, BLACK);
@@ -896,10 +672,10 @@ current_time_beginning_loop = micros();
       //ADDED
       display.setTextSize(1);
 
-      if (BuzzerState == 1){
-      display.print(lower_sound_thresh);
-      display.print("-");
-      display.print(upper_sound_thresh);
+      if (BuzzerState == 1) {
+        display.print(lower_sound_thresh);
+        display.print("-");
+        display.print(upper_sound_thresh);
       }
 
       display.println("");
@@ -927,208 +703,22 @@ current_time_beginning_loop = micros();
         //ADDED
         display.setTextSize(1);
         //display.println("Sound off for: ");
-        if (BuzzerState == 1){
-        display.print(lower_drugsound_thresh);
-        display.print("-");
-        display.print(upper_drugsound_thresh);
-        //ADDED
+        if (BuzzerState == 1) {
+          display.print(lower_drugsound_thresh);
+          display.print("-");
+          display.print(upper_drugsound_thresh);
+          //ADDED
         }
       }
-
       else
         ;
-
       display.refresh();
-
-
-
       break;
-
     default:
       // if nothing else matches, do the default
       // default is optional
       break;
   }
-
-
-
-
-
-
-
-  delay(1);
-
-//Serial.println(micros());
-//Serial.println("");
-//Serial.println("");
-
-  //----------END-------------------------------------//
-
-current_time_ending_loop = micros();
+  delay(6);
 }
 
-
-//================Functions======================================
-
-void CalculateDecayedFlowRate(void) {
-      dph = (60 * 60 * 1000) / (current_time_beginning_loop-timelatest);
-      mpd = (float)1 / millilitres_per_drop;
-      FlowRate = dph * mpd * 1000;
-      AverageFlowRate = alpha * FlowRate + (1 - alpha) * AverageFlowRate; 
-}
-
-void CalculateFlowRate(void) {
-
-    timelatest = (float)current_time_beginning_loop;
-    period = timelatest - timeoldest;
-    if ((period) < 20)
-      ;
-    else {
-      period2 = period;
-      dph = (60 * 60 * 1000) / period2;
-      mpd = (float)1 / millilitres_per_drop;
-      FlowRate = dph * mpd * 1000;
-      timeoldest = timelatest;
-      AverageFlowRate = alpha * FlowRate + (1 - alpha) * AverageFlowRate;
-    }
-}
-
-
-int smooth(int data, float filterVal, float smoothedVal) {
-
-
-  if (filterVal > 1) {     // check to make sure param's are within range
-    filterVal = .99;
-  }
-  else if (filterVal <= 0) {
-    filterVal = 0;
-  }
-
-  smoothedVal = (data * (1 - filterVal)) + (smoothedVal  *  filterVal);
-
-  return (int)smoothedVal;
-}
-
-
-///----LCD FUNCTIONS-----------------------------------------//
-
-void testdrawchar(void) {
-  display.setTextSize(1);
-  display.setTextColor(BLACK);
-  display.setCursor(0, 0);
-
-  for (uint8_t i = 0; i < 168; i++) {
-    if (i == '\n') continue;
-    display.write(i);
-    //if ((i > 0) && (i % 14 == 0))
-    //display.println();
-  }
-  display.refresh();
-}
-
-void testdrawcircle(void) {
-  for (uint8_t i = 0; i < display.height(); i += 2) {
-    display.drawCircle(display.width() / 2 - 5, display.height() / 2 - 5, i, BLACK);
-    display.refresh();
-  }
-}
-
-void testfillrect(void) {
-  uint8_t color = 1;
-  for (uint8_t i = 0; i < display.height() / 2; i += 3) {
-    // alternate colors
-    display.fillRect(i, i, display.width() - i * 2, display.height() - i * 2, color % 2);
-    display.refresh();
-    color++;
-  }
-}
-
-void testdrawtriangle(void) {
-  for (uint16_t i = 0; i < min(display.width(), display.height()) / 2; i += 5) {
-    display.drawTriangle(display.width() / 2, display.height() / 2 - i,
-                         display.width() / 2 - i, display.height() / 2 + i,
-                         display.width() / 2 + i, display.height() / 2 + i, BLACK);
-    display.refresh();
-  }
-}
-
-void testfilltriangle(void) {
-  uint8_t color = BLACK;
-  for (int16_t i = min(display.width(), display.height()) / 2; i > 0; i -= 5) {
-    display.fillTriangle(display.width() / 2, display.height() / 2 - i,
-                         display.width() / 2 - i, display.height() / 2 + i,
-                         display.width() / 2 + i, display.height() / 2 + i, color);
-    if (color == WHITE) color = BLACK;
-    else color = WHITE;
-    display.refresh();
-  }
-}
-
-void testdrawroundrect(void) {
-  for (uint8_t i = 0; i < display.height() / 4; i += 2) {
-    display.drawRoundRect(i, i, display.width() - 2 * i, display.height() - 2 * i, display.height() / 4, BLACK);
-    display.refresh();
-  }
-}
-
-void testfillroundrect(void) {
-  uint8_t color = BLACK;
-  for (uint8_t i = 0; i < display.height() / 4; i += 2) {
-    display.fillRoundRect(i, i, display.width() - 2 * i, display.height() - 2 * i, display.height() / 4, color);
-    if (color == WHITE) color = BLACK;
-    else color = WHITE;
-    display.refresh();
-  }
-}
-
-void testdrawrect(void) {
-  for (uint8_t i = 0; i < display.height() / 2; i += 2) {
-    display.drawRect(i, i, display.width() - 2 * i, display.height() - 2 * i, BLACK);
-    display.refresh();
-  }
-}
-
-void testdrawline() {
-  for (uint8_t i = 0; i < display.width(); i += 4) {
-    display.drawLine(0, 0, i, display.height() - 1, BLACK);
-    display.refresh();
-  }
-  for (uint8_t i = 0; i < display.height(); i += 4) {
-    display.drawLine(0, 0, display.width() - 1, i, BLACK);
-    display.refresh();
-  }
-  delay(250);
-
-  display.clearDisplay();
-  for (uint8_t i = 0; i < display.width(); i += 4) {
-    display.drawLine(0, display.height() - 1, i, 0, BLACK);
-    display.refresh();
-  }
-  for (int8_t i = display.height() - 1; i >= 0; i -= 4) {
-    display.drawLine(0, display.height() - 1, display.width() - 1, i, BLACK);
-    display.refresh();
-  }
-  delay(250);
-
-  display.clearDisplay();
-  for (int8_t i = display.width() - 1; i >= 0; i -= 4) {
-    display.drawLine(display.width() - 1, display.height() - 1, i, 0, BLACK);
-    display.refresh();
-  }
-  for (int8_t i = display.height() - 1; i >= 0; i -= 4) {
-    display.drawLine(display.width() - 1, display.height() - 1, 0, i, BLACK);
-    display.refresh();
-  }
-  delay(250);
-
-  display.clearDisplay();
-  for (uint8_t i = 0; i < display.height(); i += 4) {
-    display.drawLine(display.width() - 1, 0, 0, i, BLACK);
-    display.refresh();
-  }
-  for (uint8_t i = 0; i < display.width(); i += 4) {
-    display.drawLine(display.width() - 1, 0, i, display.height() - 1, BLACK);
-    display.refresh();
-  }
-  delay(250);
-}
