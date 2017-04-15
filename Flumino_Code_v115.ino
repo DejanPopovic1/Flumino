@@ -25,91 +25,79 @@ enum menu_page
 };
 
 int Menu;
-int previoiusSensorReading            = 0;     // previous state of the button
-float FlowRate                 = 180;
+int previoiusSensorReading      = 0;     // previous state of the button
+float FlowRate                  = 180;
 float DisplayedFlowRate;
-float DrugFlowRate             = 0;
-unsigned long period           = 0;
-int dropsPerMillilitre       = 20;
-int show_dose                  = false;
-int dose_shown                 = 1;
-float lower_sound_thresh = 0;
-float upper_sound_thresh = 0;
-float lower_drugsound_thresh = 0;
-float upper_drugsound_thresh = 0;
-int sensorReading             = 0;
-int IROutPin                   = 12;         // the number of the input pin
-const int analogInPin          = A1;  // Analog input pin that the potentiometer is attached to
-const int BuzzerPin            = 3;
+float DrugFlowRate              = 0;
+unsigned long period            = 0;
+int dropsPerMillilitre          = 20;
+int show_dose                   = false;
+int dose_shown                  = 1;
+float lower_sound_thresh        = 0;
+float upper_sound_thresh        = 0;
+float lower_drugsound_thresh    = 0;
+float upper_drugsound_thresh    = 0;
+int sensorReading               = 0;
+int IROutPin                    = 12;         // the number of the input pin
+const int analogInPin           = A1;  // Analog input pin that the potentiometer is attached to
+const int BuzzerPin             = 3;
 
 //------Button-1-Code-----------------
-const int Button1InPin      = A0;  // Analog input pin that the potentiometer is attached to
-int Button1                 = 0;        // value read from the button
-int button1PushCounter      = 8;   // counter for the number of button presses
-int button1State            = 0;         // current state of the button
-int lastButton1State        = 0;     // previous state of the button
+const int Button1InPin          = A0;
+int button1PushCounter          = 8;
+int button1State                = 0;
+int lastButton1State            = 0;
 //------Button-2-Code-----------------
-const int Button2InPin      = A2;  // Analog input pin that the potentiometer is attached to
-int Button2                 = 0;        // value read from the button
-int button2PushCounter      = 1;   // counter for the number of button presses
-int button2State            = 0;         // current state of the button
-int lastButton2State        = 0;     // previous state of the button
+const int Button2InPin          = A2;
+int button2PushCounter          = 1;
+int button2State                = 0;
+int lastButton2State            = 0;
 //------Button-3-Code-----------------
-const int Button3InPin      = A3;  // Analog input pin that the potentiometer is attached to
-int Button3                 = 0;        // value read from the button
-int button3PushCounter      = 1;   // counter for the number of button presses
-int button3State            = 0;         // current state of the button
-int lastButton3State        = 0;     // previous state of the button
+const int Button3InPin          = A3;
+int button3PushCounter          = 1;
+int button3State                = 0;
+int lastButton3State            = 0;
 //------Button-4-Code-----------------
-const int Button4InPin      = 2;  // Analog input pin that the potentiometer is attached to
-int Button4                 = 0;        // value read from the button
-int button4PushCounter      = false;   // counter for the number of button presses
-int button4State            = 0;         // current state of the button
-int lastButton4State        = 1;     // previous state of the button - Digital Pin
+const int Button4InPin          = 2;
+int button4PushCounter          = false;
+int button4State                = 0;
+int lastButton4State            = 1;
 
 //--------Menu-Variable-Counters-------//
-int Case0Count       = 1;
-int Case1Count       = 0;
-int Case2CountUg     = 100;
-int Case2CountMg     = 1;
-int Case3Count       = 65;
-int Case4Count       = 1000;
-int Case5Count       = 12;
+int Case0Count                  = 1;
+int Case1Count                  = 0;
+int Case2CountUg                = 100;
+int Case2CountMg                = 1;
+int Case3Count                  = 65;
+int Case4Count                  = 1000;
+int Case5Count                  = 12;
 
-int Case2editCount   = 1;
-int Case3editCount   = 1;
-//----------------Exponential-Smoothing-----//
 double AverageFlowRate = 180;
 int BuzzerState = 0;
 float newFlowRate = 0;
 unsigned long previousTime = 0;
 
+
+
 void setup()
 {
-  //------------Initialize Display------------//
   display.begin();
-  //--------------------------------------
-  char b[2];   //declaring character array
-  String str;  //declaring string
   Serial.begin(9600);
-  //-------------------------------------
+  digitalWrite(12, HIGH);
   pinMode(13, OUTPUT); //LED
   pinMode(3, OUTPUT);   //Buzzer
   pinMode(2, INPUT);   //Button 4
   pinMode(IROutPin, OUTPUT); //Infrared LED
-  //---------------------------------------
 }
 unsigned long currentTime;
 
 void loop()
 {
+
+  button1State = analogRead(Button1InPin);
   currentTime = micros();
-  //-S-1.0------------Analog Read-------------------//
-  digitalWrite(12, HIGH);   // turn the LED on (HIGH is the voltage level)
   delayMicroseconds(1);
-  //digitalWrite(12, LOW);   // turn the LED on (HIGH is the voltage level)
-  //-------Logical-Sensing-----------------------//
-  if (analogRead(analogInPin) >= SENSOR_THRESHOLD) //Threshold
+  if (analogRead(analogInPin) >= SENSOR_THRESHOLD)
   {
     sensorReading = HIGH;
   }
@@ -117,8 +105,6 @@ void loop()
   {
     sensorReading = LOW;
   }
-  //----------State-Machine---------------------
-  
   bool isDropPassing = false;
   if (previoiusSensorReading == HIGH && sensorReading == LOW)
   {
@@ -129,44 +115,23 @@ void loop()
     isDropPassing = false;
   }
   previoiusSensorReading = sensorReading;
-
-  if(isDropPassing == true)
+  if (isDropPassing == true)
   {
-    newFlowRate = flowRate(&previousTime, currentTime, 20, &AverageFlowRate, &period);
+    newFlowRate = flowRate(&previousTime, currentTime, dropsPerMillilitre, &AverageFlowRate, &period);
   }
-  if(currentTime >= previousTime + period)
+  if (currentTime >= previousTime + period)
   {
-    newFlowRate = decayedFlowRate(previousTime, currentTime, 20, period);
+    newFlowRate = decayedFlowRate(previousTime, currentTime, dropsPerMillilitre, period);
   }
   if (currentTime % DISPLAY_PERIOD <= MAXIMUM_CYCLE_TIME) {
     DisplayedFlowRate = newFlowRate;
   }
 
-  
-  
-  //===============Button1=Code=========//
-  Button1 = analogRead(Button1InPin);
-  button1State = Button1;
-  if (button1State != lastButton1State && button1State == 0 && show_dose == true) {
-    if (button1PushCounter == 8)
-      button1PushCounter = 0;
-    else
-      button1PushCounter++;
-  }
+  //===============Button1=Code=========// 
+  evaluateButton1(button1State, &lastButton1State, &button1PushCounter, show_dose);
 
-  else if (button1State != lastButton1State && button1State == 0 && show_dose == false) {
-    if (button1PushCounter == 8)
-      button1PushCounter = 0;
-    else if (button1PushCounter == 2)
-      button1PushCounter = 8;
-    else
-      button1PushCounter++;
-  }
-  lastButton1State = button1State;
-
-  //===============Button2=Code=========// Select Down
-  Button2 = analogRead(Button2InPin);
-  button2State = Button2;
+  //===============Button2=Code=========// Select Down 
+  button2State = analogRead(Button2InPin);
   int button2initialtime = micros();
   if (button2State != lastButton2State && button2State == 0) {
     if (Menu == 0)
@@ -230,12 +195,9 @@ void loop()
 
     delay(1);
   }
-
   lastButton2State = button2State;
-
   //===============Button3=Code=========// Select Up
-  Button3 = analogRead(Button3InPin);
-  button3State = Button3;
+  button3State = analogRead(Button3InPin);
   if (button3State != lastButton3State && button3State == 0) {
     if (Menu == 0)
       if (Case0Count == 0)
@@ -294,10 +256,8 @@ void loop()
     delay(1);
   }
   lastButton3State = button3State;
-
-  //===============Button4=Code=========//
-  Button4 = digitalRead(Button4InPin);
-  button4State = Button4;
+  //===============Button4=Code=========// 
+  button4State = digitalRead(Button4InPin);
   if (button4State != lastButton4State && button4State == LOW) {
 
     if (BuzzerState == 0)
@@ -312,7 +272,6 @@ void loop()
   }
   lastButton4State = button4State;
 
-  //------------------------------------------------//
   if (BuzzerState == 1 )
   {
     if ((AverageFlowRate < lower_sound_thresh  || AverageFlowRate > upper_sound_thresh) ) {
@@ -340,8 +299,6 @@ void loop()
       dropsPerMillilitre = 60;
       break;
   }
-  //-S1.1------Drip Logic----------
-
 
   if (Case1Count == 0 && dose_shown == 0)
     DrugFlowRate = (Case2CountUg * FlowRate) / (Case4Count * 60 * Case3Count) * 1000 ;
@@ -362,7 +319,6 @@ void loop()
   //-S-3.2-----Write-To-LCD----------//
   switch (Menu) {
     case drops_per_millilitre_page:
-
       display.setTextSize(1);
       display.setTextColor(WHITE, BLACK); // 'inverted' text
       display.setCursor(0, 0);
@@ -405,19 +361,17 @@ void loop()
       display.setCursor(0, 0);
       display.println("Allowable Flow  rate Deviation  without activat-ing alarm       (+/- Percentage)");
       display.setTextColor(BLACK);
-      //display.println("");
       display.print(" ");
       display.setTextColor(WHITE, BLACK); // 'inverted' text
       display.setTextSize(2);
       display.print(Case5Count);
       display.refresh();
       break;
-      
+
     case input_dosage_y_n_page:
       display.setTextSize(1);
       display.setTextColor(WHITE, BLACK);
       display.setCursor(0, 0);
-      //   display.println("Input Drug Mass Units of Measure");
       display.println(" Input Dosage?  ");
       display.setTextColor(BLACK);
       display.print(" ");
@@ -461,7 +415,6 @@ void loop()
       display.setTextSize(1);
       display.setTextColor(WHITE, BLACK);
       display.setCursor(0, 0);
-      //   display.println("Input Drug Mass Units of Measure");
       display.println(" Input Dosage?  ");
       display.setTextColor(BLACK);
       display.print(" ");
@@ -554,7 +507,6 @@ void loop()
       display.println("");
       display.setTextColor(WHITE, BLACK);
       display.println("    Drug Mass   ");
-      //display.println("");
       display.setTextColor(BLACK);
       display.print("   ");
       display.setTextSize(2);
@@ -589,41 +541,34 @@ void loop()
       display.println("");
       display.setTextColor(WHITE, BLACK);
       display.println("    Drug Mass   ");
-      //display.println("");
       display.setTextColor(BLACK);
       display.print("   ");
       display.setTextSize(2);
       display.setTextColor(WHITE, BLACK);
-
       if (Case1Count == 0)
       {
         display.println(Case2CountUg);
-
       }
       else
         display.println(Case2CountMg);
-
       display.setTextColor(BLACK);
-      // Serial.println();
       display.refresh();
-
       break;
 
     case patient_mass_page:
       display.setTextSize(1);
-      display.setTextColor(WHITE, BLACK); // 'inverted' text
+      display.setTextColor(WHITE, BLACK);
       display.setCursor(0, 0);
       display.print("  Patient Mass        (kg)      ");
       display.setTextColor(BLACK);
       display.println(" ");
-      //display.println("");
       display.setTextSize(2);
       display.print(" ");
       display.setTextColor(WHITE, BLACK);
       display.println(Case3Count);
       display.setTextSize(1);
       display.println("");
-      display.setTextColor(WHITE, BLACK); // 'inverted' text
+      display.setTextColor(WHITE, BLACK);
       display.println("Volume Dilutent       (ml)      ");
       display.setTextColor(BLACK);
       display.setTextSize(2);
@@ -635,31 +580,25 @@ void loop()
 
     case volume_dilutent_page:
       display.setTextSize(1);
-      display.setTextColor(WHITE, BLACK); // 'inverted' text
+      display.setTextColor(WHITE, BLACK);
       display.setCursor(0, 0);
       display.print("  Patient Mass        (kg)      ");
       display.setTextColor(BLACK);
       display.println(" ");
-      //display.println("");
       display.setTextSize(2);
       display.print(" ");
-      //display.setTextColor(WHITE, BLACK);
       display.println(Case3Count);
       display.setTextSize(1);
       display.println("");
-      // display.println(" <0.1-500kg>");
-      // display.println("");
-
-      display.setTextColor(WHITE, BLACK); // 'inverted' text
+      display.setTextColor(WHITE, BLACK);
       display.println("Volume Dilutent       (ml)      ");
       display.setTextColor(BLACK);
       display.setTextSize(2);
       display.print(" ");
-      display.setTextColor(WHITE, BLACK); // 'inverted' text
+      display.setTextColor(WHITE, BLACK);
       display.println(Case4Count);
       display.println("");
       display.refresh();
-
       break;
     case flow_rate_page:
       display.setTextSize(1);
@@ -669,7 +608,6 @@ void loop()
       display.setTextColor(BLACK);
       display.setTextSize(2);
       display.println(DisplayedFlowRate);
-      //ADDED
       display.setTextSize(1);
 
       if (BuzzerState == 1) {
@@ -677,13 +615,10 @@ void loop()
         display.print("-");
         display.print(upper_sound_thresh);
       }
-
       display.println("");
       display.setTextColor(WHITE, BLACK);
 
       if (show_dose == true) {
-
-
         if (dose_shown == 0) {
           display.print(" Drug Drip Rate ");
           display.println("   (ng/kg/min)  ");
@@ -696,18 +631,14 @@ void loop()
           display.print(" Drug Drip Rate ");
           display.println("   (mg/kg/min)  ");
         }
-
         display.setTextSize(2);
         display.setTextColor(BLACK);
         display.println(DrugFlowRate);
-        //ADDED
         display.setTextSize(1);
-        //display.println("Sound off for: ");
         if (BuzzerState == 1) {
           display.print(lower_drugsound_thresh);
           display.print("-");
           display.print(upper_drugsound_thresh);
-          //ADDED
         }
       }
       else
@@ -715,8 +646,6 @@ void loop()
       display.refresh();
       break;
     default:
-      // if nothing else matches, do the default
-      // default is optional
       break;
   }
   delay(6);
