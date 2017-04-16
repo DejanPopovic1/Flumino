@@ -1,8 +1,8 @@
 #define HIGH 1000
 #define LOW 0
 
-void evaluateButton1(const int button1State, int *lastButton1State, int *button1PushCounter, const int show_dose){
-  if (*lastButton1State != LOW && button1State == LOW){
+void evaluateButton1(const int button1State, int *lastButton1State, int *button1PushCounter, const int show_dose) {
+  if (*lastButton1State != LOW && button1State == LOW) {
     if (*button1PushCounter == 8)
     {
       *button1PushCounter = 0;
@@ -20,8 +20,8 @@ void evaluateButton1(const int button1State, int *lastButton1State, int *button1
 }
 
 void evaluateButton2(const int button2State, int *lastButton2State, const int Menu, int *const Case0Count, int *const Case1Count, int *const Case2CountMg, int *const Case2CountUg, int *const Case3Count,
-                     int *const Case4Count, int *const Case5Count, int *const show_dose, int *const dose_shown){
-  if (*lastButton2State != LOW && button2State == LOW){
+                     int *const Case4Count, int *const Case5Count, int *const show_dose, int *const dose_shown) {
+  if (*lastButton2State != LOW && button2State == LOW) {
     if (Menu == 0)
       if (*Case0Count >= 2)
         *Case0Count = 0;
@@ -82,8 +82,8 @@ void evaluateButton2(const int button2State, int *lastButton2State, const int Me
 }
 
 void evaluateButton3(const int button3State, int *lastButton3State, const int Menu, int *const Case0Count, int *const Case1Count, int *const Case2CountMg, int *const Case2CountUg, int *const Case3Count,
-                     int *const Case4Count, int *const Case5Count, int *const show_dose, int *const dose_shown){
-  if (*lastButton3State != LOW && button3State == LOW){
+                     int *const Case4Count, int *const Case5Count, int *const show_dose, int *const dose_shown) {
+  if (*lastButton3State != LOW && button3State == LOW) {
     if (Menu == 0)
       if (*Case0Count == 0)
         *Case0Count = 2;
@@ -142,8 +142,8 @@ void evaluateButton3(const int button3State, int *lastButton3State, const int Me
 }
 
 void evaluateButton4(const int button4State, int *const lastButton4State, bool *const BuzzerState, float *const lower_sound_thresh, float *const upper_sound_thresh, float *const lower_drugsound_thresh,
-                     float *const upper_drugsound_thresh, const double newFlowRate, const double DrugFlowRate, const int Case5Count){
-  if (*lastButton4State != LOW && button4State == LOW){
+                     float *const upper_drugsound_thresh, const double newFlowRate, const double DrugFlowRate, const int Case5Count) {
+  if (*lastButton4State != LOW && button4State == LOW) {
     *BuzzerState = !(*BuzzerState);
     *lower_sound_thresh = newFlowRate * (1 - (float)Case5Count / 100);
     *upper_sound_thresh = newFlowRate * (1 + (float)Case5Count / 100);
@@ -151,4 +151,13 @@ void evaluateButton4(const int button4State, int *const lastButton4State, bool *
     *upper_drugsound_thresh = DrugFlowRate * (1 + (float)Case5Count / 100);
   }
   *lastButton4State = button4State;
+}
+
+void evaluateBuzzer(const bool BuzzerState, const double newFlowRate, const float lower_sound_thresh, const float upper_sound_thresh, const int BuzzerPin) {
+  if (BuzzerState && (newFlowRate < lower_sound_thresh  || newFlowRate > upper_sound_thresh)) {
+    digitalWrite(BuzzerPin, HIGH );
+  }
+  else {
+    digitalWrite(BuzzerPin, LOW );
+  }
 }

@@ -132,18 +132,8 @@ void loop()
   evaluateButton2(button2State, &lastButton2State, Menu, &Case0Count, &Case1Count, &Case2CountMg, &Case2CountUg, &Case3Count, &Case4Count, &Case5Count, &show_dose, &dose_shown);
   evaluateButton3(button3State, &lastButton3State, Menu, &Case0Count, &Case1Count, &Case2CountMg, &Case2CountUg, &Case3Count, &Case4Count, &Case5Count, &show_dose, &dose_shown);
   evaluateButton4(button4State, &lastButton4State, &BuzzerState, &lower_sound_thresh, &upper_sound_thresh, &lower_drugsound_thresh, &upper_drugsound_thresh, newFlowRate, DrugFlowRate, Case5Count);
+  evaluateBuzzer(BuzzerState, newFlowRate, lower_sound_thresh, upper_sound_thresh, BuzzerPin);
 
-  if (BuzzerState){
-    if ((newFlowRate < lower_sound_thresh  || newFlowRate > upper_sound_thresh)) {
-      digitalWrite(BuzzerPin, HIGH );
-    }
-    else{
-      digitalWrite(BuzzerPin, LOW );
-    }
-  }
-  else{
-    digitalWrite(BuzzerPin, LOW );
-  }
 
   switch (Case0Count){
     case 0:
