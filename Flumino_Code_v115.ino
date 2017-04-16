@@ -27,7 +27,7 @@ enum menu_page
 int Menu;
 int previoiusSensorReading      = 0;     // previous state of the button
 float DisplayedFlowRate;
-float DrugFlowRate              = 0;
+double DrugFlowRate              = 0;
 unsigned long period            = 0;
 int dropsPerMillilitre          = 20;
 int show_dose                   = false;
@@ -122,7 +122,8 @@ void loop()
   if (currentTime % DISPLAY_PERIOD <= MAXIMUM_CYCLE_TIME) {
     DisplayedFlowRate = newFlowRate;
   }
-
+  
+  DrugFlowRate = drugFlowRate(inputDrugMassUOMSelector, dose_shown, drugMassUgSelector, newFlowRate, volumeDilutantSelector, patientMassSelector, drugMassMgSelector);
   button1State = analogRead(Button1InPin);
   button2State = analogRead(Button2InPin);
   button3State = analogRead(Button3InPin);
@@ -132,19 +133,6 @@ void loop()
   evaluateButton3(button3State, &lastButton3State, Menu, &dropsPerMillilitreSelector, &inputDrugMassUOMSelector, &drugMassMgSelector, &drugMassUgSelector, &patientMassSelector, &volumeDilutantSelector, &allowableFlowRateSelector, &show_dose, &dose_shown, &dropsPerMillilitre);
   evaluateButton4(button4State, &lastButton4State, &BuzzerState, &lower_sound_thresh, &upper_sound_thresh, &lower_drugsound_thresh, &upper_drugsound_thresh, newFlowRate, DrugFlowRate, allowableFlowRateSelector);
   evaluateBuzzer(BuzzerState, newFlowRate, lower_sound_thresh, upper_sound_thresh, BuzzerPin);
-
-  if (inputDrugMassUOMSelector == 0 && dose_shown == 0)
-    DrugFlowRate = (drugMassUgSelector * newFlowRate) / (volumeDilutantSelector * 60 * patientMassSelector) * 1000 ;
-  else if (inputDrugMassUOMSelector == 0 && dose_shown == 1)
-    DrugFlowRate = (drugMassUgSelector * newFlowRate) / (volumeDilutantSelector * 60 * patientMassSelector);
-  else if (inputDrugMassUOMSelector == 0 && dose_shown == 2)
-    DrugFlowRate = (drugMassUgSelector * newFlowRate) / (volumeDilutantSelector * 60 * patientMassSelector) / 1000;
-  else if (inputDrugMassUOMSelector == 1 && dose_shown == 0)
-    DrugFlowRate = (drugMassMgSelector * newFlowRate) / (volumeDilutantSelector * 60 * patientMassSelector) * 1000000;
-  else if (inputDrugMassUOMSelector == 1 && dose_shown == 1)
-    DrugFlowRate = (drugMassMgSelector * newFlowRate) / (volumeDilutantSelector * 60 * patientMassSelector) * 1000;
-  else if (inputDrugMassUOMSelector == 1 && dose_shown == 2)
-    DrugFlowRate = (drugMassMgSelector * newFlowRate) / (volumeDilutantSelector * 60 * patientMassSelector);
 
   //-S-3.1-----Setup-LCD----------//
   display.clearDisplay();
