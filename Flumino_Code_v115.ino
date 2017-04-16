@@ -63,13 +63,13 @@ int button4State                = 0;
 int lastButton4State            = 1;
 
 //--------Menu-Variable-Counters-------//
-int Case0Count                  = 1;
-int Case1Count                  = 0;
-int Case2CountUg                = 100;
-int Case2CountMg                = 1;
-int Case3Count                  = 65;
-int Case4Count                  = 1000;
-int Case5Count                  = 12;
+int dropsPerMillilitreSelector                  = 1;
+int inputDrugMassUOMSelector                  = 0;
+int drugMassUgSelector                = 100;
+int drugMassMgSelector                = 1;
+int patientMassSelector                  = 65;
+int volumeDilutantSelector                  = 1000;
+int allowableFlowRateSelector                  = 12;
 
 bool BuzzerState = false;
 double newFlowRate = 180;
@@ -128,23 +128,23 @@ void loop()
   button3State = analogRead(Button3InPin);
   button4State = digitalRead(Button4InPin);
   evaluateButton1(button1State, &lastButton1State, &button1PushCounter, show_dose);
-  evaluateButton2(button2State, &lastButton2State, Menu, &Case0Count, &Case1Count, &Case2CountMg, &Case2CountUg, &Case3Count, &Case4Count, &Case5Count, &show_dose, &dose_shown, &dropsPerMillilitre);
-  evaluateButton3(button3State, &lastButton3State, Menu, &Case0Count, &Case1Count, &Case2CountMg, &Case2CountUg, &Case3Count, &Case4Count, &Case5Count, &show_dose, &dose_shown, &dropsPerMillilitre);
-  evaluateButton4(button4State, &lastButton4State, &BuzzerState, &lower_sound_thresh, &upper_sound_thresh, &lower_drugsound_thresh, &upper_drugsound_thresh, newFlowRate, DrugFlowRate, Case5Count);
+  evaluateButton2(button2State, &lastButton2State, Menu, &dropsPerMillilitreSelector, &inputDrugMassUOMSelector, &drugMassMgSelector, &drugMassUgSelector, &patientMassSelector, &volumeDilutantSelector, &allowableFlowRateSelector, &show_dose, &dose_shown, &dropsPerMillilitre);
+  evaluateButton3(button3State, &lastButton3State, Menu, &dropsPerMillilitreSelector, &inputDrugMassUOMSelector, &drugMassMgSelector, &drugMassUgSelector, &patientMassSelector, &volumeDilutantSelector, &allowableFlowRateSelector, &show_dose, &dose_shown, &dropsPerMillilitre);
+  evaluateButton4(button4State, &lastButton4State, &BuzzerState, &lower_sound_thresh, &upper_sound_thresh, &lower_drugsound_thresh, &upper_drugsound_thresh, newFlowRate, DrugFlowRate, allowableFlowRateSelector);
   evaluateBuzzer(BuzzerState, newFlowRate, lower_sound_thresh, upper_sound_thresh, BuzzerPin);
 
-  if (Case1Count == 0 && dose_shown == 0)
-    DrugFlowRate = (Case2CountUg * newFlowRate) / (Case4Count * 60 * Case3Count) * 1000 ;
-  else if (Case1Count == 0 && dose_shown == 1)
-    DrugFlowRate = (Case2CountUg * newFlowRate) / (Case4Count * 60 * Case3Count);
-  else if (Case1Count == 0 && dose_shown == 2)
-    DrugFlowRate = (Case2CountUg * newFlowRate) / (Case4Count * 60 * Case3Count) / 1000;
-  else if (Case1Count == 1 && dose_shown == 0)
-    DrugFlowRate = (Case2CountMg * newFlowRate) / (Case4Count * 60 * Case3Count) * 1000000;
-  else if (Case1Count == 1 && dose_shown == 1)
-    DrugFlowRate = (Case2CountMg * newFlowRate) / (Case4Count * 60 * Case3Count) * 1000;
-  else if (Case1Count == 1 && dose_shown == 2)
-    DrugFlowRate = (Case2CountMg * newFlowRate) / (Case4Count * 60 * Case3Count);
+  if (inputDrugMassUOMSelector == 0 && dose_shown == 0)
+    DrugFlowRate = (drugMassUgSelector * newFlowRate) / (volumeDilutantSelector * 60 * patientMassSelector) * 1000 ;
+  else if (inputDrugMassUOMSelector == 0 && dose_shown == 1)
+    DrugFlowRate = (drugMassUgSelector * newFlowRate) / (volumeDilutantSelector * 60 * patientMassSelector);
+  else if (inputDrugMassUOMSelector == 0 && dose_shown == 2)
+    DrugFlowRate = (drugMassUgSelector * newFlowRate) / (volumeDilutantSelector * 60 * patientMassSelector) / 1000;
+  else if (inputDrugMassUOMSelector == 1 && dose_shown == 0)
+    DrugFlowRate = (drugMassMgSelector * newFlowRate) / (volumeDilutantSelector * 60 * patientMassSelector) * 1000000;
+  else if (inputDrugMassUOMSelector == 1 && dose_shown == 1)
+    DrugFlowRate = (drugMassMgSelector * newFlowRate) / (volumeDilutantSelector * 60 * patientMassSelector) * 1000;
+  else if (inputDrugMassUOMSelector == 1 && dose_shown == 2)
+    DrugFlowRate = (drugMassMgSelector * newFlowRate) / (volumeDilutantSelector * 60 * patientMassSelector);
 
   //-S-3.1-----Setup-LCD----------//
   display.clearDisplay();
@@ -159,7 +159,7 @@ void loop()
       display.println("    Drops/ml    ");
       display.println("");
       display.setTextColor(BLACK, WHITE);
-      if (Case0Count == 0)
+      if (dropsPerMillilitreSelector == 0)
       {
         display.setTextColor(WHITE, BLACK);
         display.println("1) 10 drops/ml");
@@ -168,7 +168,7 @@ void loop()
       else
         display.println("1) 10 drops/ml");
       display.println("");
-      if (Case0Count == 1)
+      if (dropsPerMillilitreSelector == 1)
       {
         display.setTextColor(WHITE, BLACK);
         display.println("2) 20 drops/ml");
@@ -177,7 +177,7 @@ void loop()
       else
         display.println("2) 20 drops/ml");
       display.println("");
-      if (Case0Count == 2)
+      if (dropsPerMillilitreSelector == 2)
       {
         display.setTextColor(WHITE, BLACK);
         display.println("3) 60 drops/ml");
@@ -198,7 +198,7 @@ void loop()
       display.print(" ");
       display.setTextColor(WHITE, BLACK); // 'inverted' text
       display.setTextSize(2);
-      display.print(Case5Count);
+      display.print(allowableFlowRateSelector);
       display.refresh();
       break;
 
@@ -323,7 +323,7 @@ void loop()
       display.setCursor(0, 0);
       display.println("Input Drug Mass Units of Measure");
       display.setTextColor(BLACK);
-      if (Case1Count == 0) {
+      if (inputDrugMassUOMSelector == 0) {
         display.setTextColor(WHITE, BLACK);
         display.println("1) ug");
         display.setTextColor(BLACK);
@@ -331,7 +331,7 @@ void loop()
       else
         display.println("1) ug");
       display.println("");
-      if (Case1Count == 1) {
+      if (inputDrugMassUOMSelector == 1) {
         display.setTextColor(WHITE, BLACK);
         display.println("2) mg");
         display.setTextColor(BLACK);
@@ -344,10 +344,10 @@ void loop()
       display.setTextColor(BLACK);
       display.print("   ");
       display.setTextSize(2);
-      if (Case1Count == 0)
-        display.println(Case2CountUg);
+      if (inputDrugMassUOMSelector == 0)
+        display.println(drugMassUgSelector);
       else
-        display.println(Case2CountMg);
+        display.println(drugMassMgSelector);
       display.refresh();
       break;
 
@@ -357,7 +357,7 @@ void loop()
       display.setCursor(0, 0);
       display.println("Input Drug Mass Units of Measure");
       display.setTextColor(BLACK);
-      if (Case1Count == 0) {
+      if (inputDrugMassUOMSelector == 0) {
         display.setTextColor(WHITE, BLACK);
         display.println("1) ug");
         display.setTextColor(BLACK);
@@ -365,7 +365,7 @@ void loop()
       else
         display.println("1) ug");
       display.println("");
-      if (Case1Count == 1) {
+      if (inputDrugMassUOMSelector == 1) {
         display.setTextColor(WHITE, BLACK);
         display.println("2) mg");
         display.setTextColor(BLACK);
@@ -379,12 +379,12 @@ void loop()
       display.print("   ");
       display.setTextSize(2);
       display.setTextColor(WHITE, BLACK);
-      if (Case1Count == 0)
+      if (inputDrugMassUOMSelector == 0)
       {
-        display.println(Case2CountUg);
+        display.println(drugMassUgSelector);
       }
       else
-        display.println(Case2CountMg);
+        display.println(drugMassMgSelector);
       display.setTextColor(BLACK);
       display.refresh();
       break;
@@ -399,7 +399,7 @@ void loop()
       display.setTextSize(2);
       display.print(" ");
       display.setTextColor(WHITE, BLACK);
-      display.println(Case3Count);
+      display.println(patientMassSelector);
       display.setTextSize(1);
       display.println("");
       display.setTextColor(WHITE, BLACK);
@@ -407,7 +407,7 @@ void loop()
       display.setTextColor(BLACK);
       display.setTextSize(2);
       display.print(" ");
-      display.println(Case4Count);
+      display.println(volumeDilutantSelector);
       display.println("");
       display.refresh();
       break;
@@ -421,7 +421,7 @@ void loop()
       display.println(" ");
       display.setTextSize(2);
       display.print(" ");
-      display.println(Case3Count);
+      display.println(patientMassSelector);
       display.setTextSize(1);
       display.println("");
       display.setTextColor(WHITE, BLACK);
@@ -430,7 +430,7 @@ void loop()
       display.setTextSize(2);
       display.print(" ");
       display.setTextColor(WHITE, BLACK);
-      display.println(Case4Count);
+      display.println(volumeDilutantSelector);
       display.println("");
       display.refresh();
       break;

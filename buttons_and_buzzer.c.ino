@@ -19,15 +19,15 @@ void evaluateButton1(const int button1State, int *lastButton1State, int *button1
   *lastButton1State = button1State;
 }
 
-void evaluateButton2(const int button2State, int *lastButton2State, const int Menu, int *const Case0Count, int *const Case1Count, int *const Case2CountMg, int *const Case2CountUg, int *const Case3Count,
-                     int *const Case4Count, int *const Case5Count, int *const show_dose, int *const dose_shown, int *const dropsPerMillilitre) {
+void evaluateButton2(const int button2State, int *lastButton2State, const int Menu, int *const dropsPerMillilitreSelector, int *const inputDrugMassUOMSelector, int *const drugMassMgSelector, int *const drugMassUgSelector, int *const patientMassSelector,
+                     int *const volumeDilutantSelector, int *const allowableFlowRateSelector, int *const show_dose, int *const dose_shown, int *const dropsPerMillilitre) {
   if (*lastButton2State != LOW && button2State == LOW) {
     if (Menu == 0) {
-      if (*Case0Count >= 2)
-        *Case0Count = 0;
+      if (*dropsPerMillilitreSelector >= 2)
+        *dropsPerMillilitreSelector = 0;
       else
-        (*Case0Count)++;
-      switch (*Case0Count) {
+        (*dropsPerMillilitreSelector)++;
+      switch (*dropsPerMillilitreSelector) {
         case 0:
           *dropsPerMillilitre = 10;
           break;
@@ -40,41 +40,41 @@ void evaluateButton2(const int button2State, int *lastButton2State, const int Me
       }
     }
     else if (Menu == 4)
-      if (*Case1Count >= 1)
-        *Case1Count = 0;
+      if (*inputDrugMassUOMSelector >= 1)
+        *inputDrugMassUOMSelector = 0;
       else
-        (*Case1Count)++;
+        (*inputDrugMassUOMSelector)++;
 
-    else if (Menu == 5 && *Case1Count == 0)
-      if (*Case2CountUg >= 100)
-        *Case2CountUg = 0;
+    else if (Menu == 5 && *inputDrugMassUOMSelector == 0)
+      if (*drugMassUgSelector >= 100)
+        *drugMassUgSelector = 0;
 
       else
-        (*Case2CountUg)++;
+        (*drugMassUgSelector)++;
 
-    else if (Menu == 5 && *Case1Count == 1)
-      if (*Case2CountMg >= 100)
-        *Case2CountMg = 0;
+    else if (Menu == 5 && *inputDrugMassUOMSelector == 1)
+      if (*drugMassMgSelector >= 100)
+        *drugMassMgSelector = 0;
       else
-        (*Case2CountMg)++;
+        (*drugMassMgSelector)++;
 
     else if (Menu == 6)
-      if (*Case3Count >= 500)
-        *Case3Count = 0;
+      if (*patientMassSelector >= 500)
+        *patientMassSelector = 0;
       else
-        (*Case3Count)++;
+        (*patientMassSelector)++;
 
     else if (Menu == 7)
-      if (*Case4Count >= 1000)
-        *Case4Count = 0;
+      if (*volumeDilutantSelector >= 1000)
+        *volumeDilutantSelector = 0;
       else
-        (*Case4Count)++;
+        (*volumeDilutantSelector)++;
 
     else if (Menu == 1)
-      if (*Case5Count >= 100)
-        *Case5Count = 0;
+      if (*allowableFlowRateSelector >= 100)
+        *allowableFlowRateSelector = 0;
       else
-        (*Case5Count)++;
+        (*allowableFlowRateSelector)++;
 
     else if (Menu == 2)
       if (*show_dose == true)
@@ -93,15 +93,15 @@ void evaluateButton2(const int button2State, int *lastButton2State, const int Me
   *lastButton2State = button2State;
 }
 
-void evaluateButton3(const int button3State, int *lastButton3State, const int Menu, int *const Case0Count, int *const Case1Count, int *const Case2CountMg, int *const Case2CountUg, int *const Case3Count,
-                     int *const Case4Count, int *const Case5Count, int *const show_dose, int *const dose_shown, int *const dropsPerMillilitre) {
+void evaluateButton3(const int button3State, int *lastButton3State, const int Menu, int *const dropsPerMillilitreSelector, int *const inputDrugMassUOMSelector, int *const drugMassMgSelector, int *const drugMassUgSelector, int *const patientMassSelector,
+                     int *const volumeDilutantSelector, int *const allowableFlowRateSelector, int *const show_dose, int *const dose_shown, int *const dropsPerMillilitre) {
   if (*lastButton3State != LOW && button3State == LOW) {
     if (Menu == 0) {
-      if (*Case0Count == 0)
-        *Case0Count = 2;
+      if (*dropsPerMillilitreSelector == 0)
+        *dropsPerMillilitreSelector = 2;
       else
-        (*Case0Count)--;
-      switch (*Case0Count) {
+        (*dropsPerMillilitreSelector)--;
+      switch (*dropsPerMillilitreSelector) {
         case 0:
           *dropsPerMillilitre = 10;
           break;
@@ -114,39 +114,39 @@ void evaluateButton3(const int button3State, int *lastButton3State, const int Me
       }
     }
     else if (Menu == 4)
-      if (*Case1Count == 0)
-        *Case1Count = 1;
+      if (*inputDrugMassUOMSelector == 0)
+        *inputDrugMassUOMSelector = 1;
       else
-        (*Case1Count)--;
+        (*inputDrugMassUOMSelector)--;
 
-    else if (Menu == 5 && *Case1Count == 0)
-      if (*Case2CountUg == 0)
-        *Case2CountUg = 100;
+    else if (Menu == 5 && *inputDrugMassUOMSelector == 0)
+      if (*drugMassUgSelector == 0)
+        *drugMassUgSelector = 100;
       else
-        (*Case2CountUg)--;
-    else if (Menu == 5 && *Case1Count == 1)
-      if (*Case2CountMg == 0)
-        *Case2CountMg = 100;
+        (*drugMassUgSelector)--;
+    else if (Menu == 5 && *inputDrugMassUOMSelector == 1)
+      if (*drugMassMgSelector == 0)
+        *drugMassMgSelector = 100;
       else
-        (*Case2CountMg)--;
+        (*drugMassMgSelector)--;
 
     else if (Menu == 6)
-      if (*Case3Count == 0)
-        *Case3Count = 500;
+      if (*patientMassSelector == 0)
+        *patientMassSelector = 500;
       else
-        (*Case3Count)--;
+        (*patientMassSelector)--;
 
     else if (Menu == 7)
-      if (*Case4Count == 0)
-        *Case4Count = 1000;
+      if (*volumeDilutantSelector == 0)
+        *volumeDilutantSelector = 1000;
       else
-        (*Case4Count)--;
+        (*volumeDilutantSelector)--;
 
     else if (Menu == 1)
-      if (*Case5Count == 0)
-        *Case5Count = 100;
+      if (*allowableFlowRateSelector == 0)
+        *allowableFlowRateSelector = 100;
       else
-        (*Case5Count)--;
+        (*allowableFlowRateSelector)--;
 
     else if (Menu == 2)
       if (*show_dose == true)
@@ -165,13 +165,13 @@ void evaluateButton3(const int button3State, int *lastButton3State, const int Me
 }
 
 void evaluateButton4(const int button4State, int *const lastButton4State, bool *const BuzzerState, float *const lower_sound_thresh, float *const upper_sound_thresh, float *const lower_drugsound_thresh,
-                     float *const upper_drugsound_thresh, const double newFlowRate, const double DrugFlowRate, const int Case5Count) {
+                     float *const upper_drugsound_thresh, const double newFlowRate, const double DrugFlowRate, const int allowableFlowRateSelector) {
   if (*lastButton4State != LOW && button4State == LOW) {
     *BuzzerState = !(*BuzzerState);
-    *lower_sound_thresh = newFlowRate * (1 - (float)Case5Count / 100);
-    *upper_sound_thresh = newFlowRate * (1 + (float)Case5Count / 100);
-    *lower_drugsound_thresh = DrugFlowRate * (1 - (float)Case5Count / 100);
-    *upper_drugsound_thresh = DrugFlowRate * (1 + (float)Case5Count / 100);
+    *lower_sound_thresh = newFlowRate * (1 - (float)allowableFlowRateSelector / 100);
+    *upper_sound_thresh = newFlowRate * (1 + (float)allowableFlowRateSelector / 100);
+    *lower_drugsound_thresh = DrugFlowRate * (1 - (float)allowableFlowRateSelector / 100);
+    *upper_drugsound_thresh = DrugFlowRate * (1 + (float)allowableFlowRateSelector / 100);
   }
   *lastButton4State = button4State;
 }
