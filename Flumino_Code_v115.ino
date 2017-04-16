@@ -72,12 +72,10 @@ int Case3Count                  = 65;
 int Case4Count                  = 1000;
 int Case5Count                  = 12;
 
-double AverageFlowRate = 180;
-int BuzzerState = 0;
-float newFlowRate = 0;
+bool BuzzerState = false;
+double newFlowRate = 180;
 unsigned long previousTime = 0;
-
-
+bool isDropPassing = false;
 
 void setup()
 {
@@ -93,10 +91,9 @@ unsigned long currentTime;
 
 void loop()
 {
-
-  button1State = analogRead(Button1InPin);
   currentTime = micros();
   delayMicroseconds(1);
+
   if (analogRead(analogInPin) >= SENSOR_THRESHOLD)
   {
     sensorReading = HIGH;
@@ -105,7 +102,7 @@ void loop()
   {
     sensorReading = LOW;
   }
-  bool isDropPassing = false;
+
   if (previoiusSensorReading == HIGH && sensorReading == LOW)
   {
     isDropPassing = true;
@@ -117,7 +114,7 @@ void loop()
   previoiusSensorReading = sensorReading;
   if (isDropPassing == true)
   {
-    newFlowRate = flowRate(&previousTime, currentTime, dropsPerMillilitre, &AverageFlowRate, &period);
+    newFlowRate = flowRate(&previousTime, currentTime, dropsPerMillilitre, &newFlowRate, &period);
   }
   if (currentTime >= previousTime + period)
   {
@@ -127,168 +124,28 @@ void loop()
     DisplayedFlowRate = newFlowRate;
   }
 
-  //===============Button1=Code=========// 
-  evaluateButton1(button1State, &lastButton1State, &button1PushCounter, show_dose);
-
-  //===============Button2=Code=========// Select Down 
+  button1State = analogRead(Button1InPin);
   button2State = analogRead(Button2InPin);
-  int button2initialtime = micros();
-  if (button2State != lastButton2State && button2State == 0) {
-    if (Menu == 0)
-      if (Case0Count >= 2)
-        Case0Count = 0;
-      else
-        Case0Count++;
-
-    else if (Menu == 4)
-      if (Case1Count >= 1)
-        Case1Count = 0;
-      else
-        Case1Count++;
-
-    else if (Menu == drug_mass_page && Case1Count == 0)
-      if (Case2CountUg >= 100)
-        Case2CountUg = 0;
-
-      else if (micros() - button2initialtime >= 1000000) {
-        Serial.println("Beep");
-      }
-
-      else
-        Case2CountUg++;
-
-    else if (Menu == 5 && Case1Count == 1)
-      if (Case2CountMg >= 100)
-        Case2CountMg = 0;
-      else
-        Case2CountMg++;
-
-    else if (Menu == 6)
-      if (Case3Count >= 500)
-        Case3Count = 0;
-      else
-        Case3Count++;
-
-    else if (Menu == 7)
-      if (Case4Count >= 1000)
-        Case4Count = 0;
-      else
-        Case4Count++;
-
-    else if (Menu == 1)
-      if (Case5Count >= 100)
-        Case5Count = 0;
-      else
-        Case5Count++;
-
-    else if (Menu == 2)
-      if (show_dose == true)
-        show_dose = false;
-      else
-        show_dose = true;
-
-    else if (Menu == 3)
-      if (dose_shown >= 2)
-        dose_shown = 0;
-      else
-        dose_shown ++;
-
-    delay(1);
-  }
-  lastButton2State = button2State;
-  //===============Button3=Code=========// Select Up
   button3State = analogRead(Button3InPin);
-  if (button3State != lastButton3State && button3State == 0) {
-    if (Menu == 0)
-      if (Case0Count == 0)
-        Case0Count = 2;
-      else
-        Case0Count--;
-
-    else if (Menu == 4)
-      if (Case1Count == 0)
-        Case1Count = 1;
-      else
-        Case1Count--;
-
-    else if (Menu == 5 && Case1Count == 0)
-      if (Case2CountUg == 0)
-        Case2CountUg = 100;
-      else
-        Case2CountUg--;
-    else if (Menu == 5 && Case1Count == 1)
-      if (Case2CountMg == 0)
-        Case2CountMg = 100;
-      else
-        Case2CountMg--;
-
-
-    else if (Menu == 6)
-      if (Case3Count == 0)
-        Case3Count = 500;
-      else
-        Case3Count--;
-
-    else if (Menu == 7)
-      if (Case4Count == 0)
-        Case4Count = 1000;
-      else
-        Case4Count--;
-
-    else if (Menu == 1)
-      if (Case5Count == 0)
-        Case5Count = 100;
-      else
-        Case5Count--;
-
-    else if (Menu == 2)
-      if (show_dose == true)
-        show_dose = false;
-      else
-        show_dose = true;
-
-    else if (Menu == 3)
-      if (dose_shown == 0)
-        dose_shown = 2;
-      else
-        dose_shown --;
-
-    delay(1);
-  }
-  lastButton3State = button3State;
-  //===============Button4=Code=========// 
   button4State = digitalRead(Button4InPin);
-  if (button4State != lastButton4State && button4State == LOW) {
+  evaluateButton1(button1State, &lastButton1State, &button1PushCounter, show_dose);
+  evaluateButton2(button2State, &lastButton2State, Menu, &Case0Count, &Case1Count, &Case2CountMg, &Case2CountUg, &Case3Count, &Case4Count, &Case5Count, &show_dose, &dose_shown);
+  evaluateButton3(button3State, &lastButton3State, Menu, &Case0Count, &Case1Count, &Case2CountMg, &Case2CountUg, &Case3Count, &Case4Count, &Case5Count, &show_dose, &dose_shown);
+  evaluateButton4(button4State, &lastButton4State, &BuzzerState, &lower_sound_thresh, &upper_sound_thresh, &lower_drugsound_thresh, &upper_drugsound_thresh, newFlowRate, DrugFlowRate, Case5Count);
 
-    if (BuzzerState == 0)
-      BuzzerState = 1 ;
-    else
-      BuzzerState = 0 ;
-
-    lower_sound_thresh = AverageFlowRate * (1 - (float)Case5Count / 100);
-    upper_sound_thresh = AverageFlowRate * (1 + (float)Case5Count / 100);
-    lower_drugsound_thresh = DrugFlowRate * (1 - (float)Case5Count / 100);
-    upper_drugsound_thresh = DrugFlowRate * (1 + (float)Case5Count / 100);
-  }
-  lastButton4State = button4State;
-
-  if (BuzzerState == 1 )
-  {
-    if ((AverageFlowRate < lower_sound_thresh  || AverageFlowRate > upper_sound_thresh) ) {
-      //Serial.println("Beep");
+  if (BuzzerState){
+    if ((newFlowRate < lower_sound_thresh  || newFlowRate > upper_sound_thresh)) {
       digitalWrite(BuzzerPin, HIGH );
-
     }
-    else {
+    else{
       digitalWrite(BuzzerPin, LOW );
     }
   }
-  else
-  {
+  else{
     digitalWrite(BuzzerPin, LOW );
   }
 
-  switch (Case0Count) {
+  switch (Case0Count){
     case 0:
       dropsPerMillilitre = 10;
       break;
@@ -315,6 +172,7 @@ void loop()
 
   //-S-3.1-----Setup-LCD----------//
   display.clearDisplay();
+  
   Menu = button1PushCounter;
   //-S-3.2-----Write-To-LCD----------//
   switch (Menu) {
