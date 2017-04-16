@@ -20,14 +20,25 @@ void evaluateButton1(const int button1State, int *lastButton1State, int *button1
 }
 
 void evaluateButton2(const int button2State, int *lastButton2State, const int Menu, int *const Case0Count, int *const Case1Count, int *const Case2CountMg, int *const Case2CountUg, int *const Case3Count,
-                     int *const Case4Count, int *const Case5Count, int *const show_dose, int *const dose_shown) {
+                     int *const Case4Count, int *const Case5Count, int *const show_dose, int *const dose_shown, int *const dropsPerMillilitre) {
   if (*lastButton2State != LOW && button2State == LOW) {
-    if (Menu == 0)
+    if (Menu == 0) {
       if (*Case0Count >= 2)
         *Case0Count = 0;
       else
         (*Case0Count)++;
-
+      switch (*Case0Count) {
+        case 0:
+          *dropsPerMillilitre = 10;
+          break;
+        case 1:
+          *dropsPerMillilitre = 20;
+          break;
+        case 2:
+          *dropsPerMillilitre = 60;
+          break;
+      }
+    }
     else if (Menu == 4)
       if (*Case1Count >= 1)
         *Case1Count = 0;
@@ -76,20 +87,32 @@ void evaluateButton2(const int button2State, int *lastButton2State, const int Me
         *dose_shown = 0;
       else
         (*dose_shown)++;
+
     delay(1);
   }
   *lastButton2State = button2State;
 }
 
 void evaluateButton3(const int button3State, int *lastButton3State, const int Menu, int *const Case0Count, int *const Case1Count, int *const Case2CountMg, int *const Case2CountUg, int *const Case3Count,
-                     int *const Case4Count, int *const Case5Count, int *const show_dose, int *const dose_shown) {
+                     int *const Case4Count, int *const Case5Count, int *const show_dose, int *const dose_shown, int *const dropsPerMillilitre) {
   if (*lastButton3State != LOW && button3State == LOW) {
-    if (Menu == 0)
+    if (Menu == 0) {
       if (*Case0Count == 0)
         *Case0Count = 2;
       else
         (*Case0Count)--;
-
+      switch (*Case0Count) {
+        case 0:
+          *dropsPerMillilitre = 10;
+          break;
+        case 1:
+          *dropsPerMillilitre = 20;
+          break;
+        case 2:
+          *dropsPerMillilitre = 60;
+          break;
+      }
+    }
     else if (Menu == 4)
       if (*Case1Count == 0)
         *Case1Count = 1;
