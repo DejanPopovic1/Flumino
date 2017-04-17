@@ -26,7 +26,7 @@ enum menu_page
 
 int Menu;
 int previoiusSensorReading      = 0;     // previous state of the button
-float DisplayedFlowRate;
+double DisplayedFlowRate;
 double DrugFlowRate              = 0;
 unsigned long period            = 0;
 int dropsPerMillilitre          = 20;
@@ -63,18 +63,20 @@ int button4State                = 0;
 int lastButton4State            = 1;
 
 //--------Menu-Variable-Counters-------//
-int dropsPerMillilitreSelector                  = 1;
-int inputDrugMassUOMSelector                  = 0;
-int drugMassUgSelector                = 100;
-int drugMassMgSelector                = 1;
-int patientMassSelector                  = 65;
-int volumeDilutantSelector                  = 1000;
-int allowableFlowRateSelector                  = 12;
+int dropsPerMillilitreSelector  = 1;
+int inputDrugMassUOMSelector    = 0;
+int drugMassUgSelector          = 100;
+int drugMassMgSelector          = 1;
+int patientMassSelector         = 65;
+int volumeDilutantSelector      = 1000;
+int allowableFlowRateSelector   = 12;
 
 bool BuzzerState = false;
 double newFlowRate = 180;
 unsigned long previousTime = 0;
 bool isDropPassing = false;
+
+void readPins(int *const, int *const, int *const, int *const, int *const, const int, const int, const int, const int, const int);
 
 void setup()
 {
@@ -92,55 +94,44 @@ void loop()
 {
   currentTime = micros();
   delayMicroseconds(1);
+  readPins(&sensorReading, &button1State, &button2State, &button3State, &button4State, analogInPin, Button1InPin, Button2InPin, Button3InPin, Button4InPin);
+  isDropPassing = evaluateSensor(previoiusSensorReading, sensorReading);
 
-  if (analogRead(analogInPin) >= SENSOR_THRESHOLD)
-  {
-    sensorReading = HIGH;
-  }
-  else
-  {
-    sensorReading = LOW;
-  }
-
-  if (previoiusSensorReading == HIGH && sensorReading == LOW)
-  {
-    isDropPassing = true;
-  }
-  else
-  {
-    isDropPassing = false;
-  }
-  previoiusSensorReading = sensorReading;
-  if (isDropPassing == true)
-  {
+if (isDropPassing == true) {
     newFlowRate = flowRate(&previousTime, currentTime, dropsPerMillilitre, &newFlowRate, &period);
   }
-  if (currentTime >= previousTime + period)
-  {
-    newFlowRate = decayedFlowRate(previousTime, currentTime, dropsPerMillilitre, period);
+  if (currentTime >= previousTime + period) {
+    newFlowRate =  decayedFlowRate(previousTime, currentTime, dropsPerMillilitre, period);
   }
   if (currentTime % DISPLAY_PERIOD <= MAXIMUM_CYCLE_TIME) {
     DisplayedFlowRate = newFlowRate;
   }
-  
+
   DrugFlowRate = drugFlowRate(inputDrugMassUOMSelector, dose_shown, drugMassUgSelector, newFlowRate, volumeDilutantSelector, patientMassSelector, drugMassMgSelector);
-  button1State = analogRead(Button1InPin);
-  button2State = analogRead(Button2InPin);
-  button3State = analogRead(Button3InPin);
-  button4State = digitalRead(Button4InPin);
   evaluateButton1(button1State, &lastButton1State, &button1PushCounter, show_dose);
   evaluateButton2(button2State, &lastButton2State, Menu, &dropsPerMillilitreSelector, &inputDrugMassUOMSelector, &drugMassMgSelector, &drugMassUgSelector, &patientMassSelector, &volumeDilutantSelector, &allowableFlowRateSelector, &show_dose, &dose_shown, &dropsPerMillilitre);
   evaluateButton3(button3State, &lastButton3State, Menu, &dropsPerMillilitreSelector, &inputDrugMassUOMSelector, &drugMassMgSelector, &drugMassUgSelector, &patientMassSelector, &volumeDilutantSelector, &allowableFlowRateSelector, &show_dose, &dose_shown, &dropsPerMillilitre);
   evaluateButton4(button4State, &lastButton4State, &BuzzerState, &lower_sound_thresh, &upper_sound_thresh, &lower_drugsound_thresh, &upper_drugsound_thresh, newFlowRate, DrugFlowRate, allowableFlowRateSelector);
   evaluateBuzzer(BuzzerState, newFlowRate, lower_sound_thresh, upper_sound_thresh, BuzzerPin);
-
-  //-S-3.1-----Setup-LCD----------//
+  previoiusSensorReading = sensorReading;
   display.clearDisplay();
-  
   Menu = button1PushCounter;
-  //-S-3.2-----Write-To-LCD----------//
   printToScreen(Menu, dropsPerMillilitreSelector, allowableFlowRateSelector, show_dose, dose_shown, inputDrugMassUOMSelector, drugMassUgSelector, drugMassMgSelector, patientMassSelector, volumeDilutantSelector,
                 DisplayedFlowRate, BuzzerState, lower_sound_thresh, upper_sound_thresh, lower_drugsound_thresh, upper_drugsound_thresh);
   delay(6);
+}
+
+void readPins(int *const sensorReading, int *const button1State, int *const button2State, int *const button3State, int *const button4State, const int analogInPin, const int Button1InPin, const int Button2InPin,
+              const int Button3InPin, const int Button4InPin) {
+  if (analogRead(analogInPin) >= SENSOR_THRESHOLD){
+    *sensorReading = HIGH;
+  }
+  else{
+    *sensorReading = LOW;
+  }
+  *button1State = analogRead(Button1InPin);
+  *button2State = analogRead(Button2InPin);
+  *button3State = analogRead(Button3InPin);
+  *button4State = digitalRead(Button4InPin);
 }
 
