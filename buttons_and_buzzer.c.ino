@@ -196,8 +196,8 @@ void evaluateButton4(const int menu, const int button4State, int *const lastButt
   *lastButton4State = button4State;
 }
 
-void evaluateBuzzer(const bool BuzzerState, const double newFlowRate, const float lower_sound_thresh, const float upper_sound_thresh, const int BuzzerPin) {
-  if (BuzzerState && (newFlowRate < lower_sound_thresh  || newFlowRate > upper_sound_thresh)) {
+void evaluateBuzzer(const bool BuzzerState, const double DisplayedFlowRate, const float lower_sound_thresh, const float upper_sound_thresh, const int BuzzerPin) {
+  if (BuzzerState && (DisplayedFlowRate < lower_sound_thresh  || DisplayedFlowRate > upper_sound_thresh)) {
     digitalWrite(BuzzerPin, HIGH );
   }
   else {
