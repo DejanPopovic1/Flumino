@@ -38,24 +38,24 @@ double decayedFlowRate(const unsigned long timeStart, const unsigned long timeEn
   }
 }
 
-double drugFlowRate(const int inputDrugMassUOMSelector, const int dose_shown, const int drugMassUgSelector, const double newFlowRate, const int volumeDilutantSelector, const int patientMassSelector,
+double drugFlowRate(const int inputDrugMassUOMSelector, const int dose_shown, const int drugMassUgSelector, const double DisplayedFlowRate, const int volumeDilutantSelector, const int patientMassSelector,
                     const int drugMassMgSelector) {
   if (inputDrugMassUOMSelector == 0 && dose_shown == 0) {
-    DrugFlowRate = (drugMassUgSelector * newFlowRate) / (volumeDilutantSelector * 60 * patientMassSelector) * 1000 ;
+    DrugFlowRate = (drugMassUgSelector * DisplayedFlowRate) / (volumeDilutantSelector * 60 * patientMassSelector) * 1000 ;
   }
   else if (inputDrugMassUOMSelector == 0 && dose_shown == 1){
-    DrugFlowRate = (drugMassUgSelector * newFlowRate) / (volumeDilutantSelector * 60 * patientMassSelector);
+    DrugFlowRate = (drugMassUgSelector * DisplayedFlowRate) / (volumeDilutantSelector * 60 * patientMassSelector);
   }
   else if (inputDrugMassUOMSelector == 0 && dose_shown == 2){
-    DrugFlowRate = (drugMassUgSelector * newFlowRate) / (volumeDilutantSelector * 60 * patientMassSelector) / 1000;
+    DrugFlowRate = (drugMassUgSelector * DisplayedFlowRate) / (volumeDilutantSelector * 60 * patientMassSelector) / 1000;
   }
   else if (inputDrugMassUOMSelector == 1 && dose_shown == 0){
-    DrugFlowRate = (drugMassMgSelector * newFlowRate) / (volumeDilutantSelector * 60 * patientMassSelector) * 1000000;
+    DrugFlowRate = (drugMassMgSelector * DisplayedFlowRate) / (volumeDilutantSelector * 60 * patientMassSelector) * 1000000;
   }
   else if (inputDrugMassUOMSelector == 1 && dose_shown == 1){
-    DrugFlowRate = (drugMassMgSelector * newFlowRate) / (volumeDilutantSelector * 60 * patientMassSelector) * 1000;
+    DrugFlowRate = (drugMassMgSelector * DisplayedFlowRate) / (volumeDilutantSelector * 60 * patientMassSelector) * 1000;
   }
   else if (inputDrugMassUOMSelector == 1 && dose_shown == 2){
-    DrugFlowRate = (drugMassMgSelector * newFlowRate) / (volumeDilutantSelector * 60 * patientMassSelector);
+    DrugFlowRate = (drugMassMgSelector * DisplayedFlowRate) / (volumeDilutantSelector * 60 * patientMassSelector);
   }
 }

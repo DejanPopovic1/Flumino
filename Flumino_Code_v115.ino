@@ -6,8 +6,7 @@
 #define SS                       7
 #define BLACK                    0
 #define WHITE                    1
-#define DISPLAY_PERIOD           2000000
-#define MAXIMUM_CYCLE_TIME       20000
+
 #define SENSOR_THRESHOLD 600
 Adafruit_SharpMem display(SCK, MOSI, SS);  //For the SPI BUS
 
@@ -96,16 +95,12 @@ void loop()
   delayMicroseconds(1);
   readPins(&sensorReading, &button1State, &button2State, &button3State, &button4State, analogInPin, Button1InPin, Button2InPin, Button3InPin, Button4InPin);
   isDropPassing = evaluateSensor(previoiusSensorReading, sensorReading);
-
-
   evaluateFlowRate(isDropPassing, &DisplayedFlowRate, &previousTime, currentTime, dropsPerMillilitre, &newFlowRate, &period);
-
-
-  DrugFlowRate = drugFlowRate(inputDrugMassUOMSelector, dose_shown, drugMassUgSelector, newFlowRate, volumeDilutantSelector, patientMassSelector, drugMassMgSelector);
+  DrugFlowRate = drugFlowRate(inputDrugMassUOMSelector, dose_shown, drugMassUgSelector, DisplayedFlowRate, volumeDilutantSelector, patientMassSelector, drugMassMgSelector);
   evaluateButton1(button1State, &lastButton1State, &button1PushCounter, show_dose);
   evaluateButton2(button2State, &lastButton2State, Menu, &dropsPerMillilitreSelector, &inputDrugMassUOMSelector, &drugMassMgSelector, &drugMassUgSelector, &patientMassSelector, &volumeDilutantSelector, &allowableFlowRateSelector, &show_dose, &dose_shown, &dropsPerMillilitre);
   evaluateButton3(button3State, &lastButton3State, Menu, &dropsPerMillilitreSelector, &inputDrugMassUOMSelector, &drugMassMgSelector, &drugMassUgSelector, &patientMassSelector, &volumeDilutantSelector, &allowableFlowRateSelector, &show_dose, &dose_shown, &dropsPerMillilitre);
-  evaluateButton4(button4State, &lastButton4State, &BuzzerState, &lower_sound_thresh, &upper_sound_thresh, &lower_drugsound_thresh, &upper_drugsound_thresh, newFlowRate, DrugFlowRate, allowableFlowRateSelector);
+  evaluateButton4(Menu, button4State, &lastButton4State, &BuzzerState, &lower_sound_thresh, &upper_sound_thresh, &lower_drugsound_thresh, &upper_drugsound_thresh, newFlowRate, DrugFlowRate, allowableFlowRateSelector);
   evaluateBuzzer(BuzzerState, newFlowRate, lower_sound_thresh, upper_sound_thresh, BuzzerPin);
   previoiusSensorReading = sensorReading;
   display.clearDisplay();

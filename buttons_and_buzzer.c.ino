@@ -1,4 +1,5 @@
-#define LOW 0
+#define MAXIMUM_CYCLE_TIME  20000
+#define DISPLAY_PERIOD      2000000
 
 bool evaluateSensor(const int previoiusSensorReading, const int sensorReading) {
   if (previoiusSensorReading == HIGH && sensorReading == LOW) {
@@ -10,7 +11,7 @@ bool evaluateSensor(const int previoiusSensorReading, const int sensorReading) {
 }
 
 void evaluateFlowRate(bool isDropPassing, double *DisplayedFlowRate, unsigned long *previousTime, unsigned long currentTime, int dropsPerMillilitre, double *newFlowRate, unsigned long *period) {
-if (isDropPassing == true) {
+  if (isDropPassing == true) {
     *newFlowRate = flowRate(previousTime, currentTime, dropsPerMillilitre, newFlowRate, period);
   }
   if (currentTime >= *previousTime + *period) {
@@ -107,7 +108,6 @@ void evaluateButton2(const int button2State, int *lastButton2State, const int Me
         *dose_shown = 0;
       else
         (*dose_shown)++;
-
     delay(1);
   }
   *lastButton2State = button2State;
@@ -184,9 +184,9 @@ void evaluateButton3(const int button3State, int *lastButton3State, const int Me
   *lastButton3State = button3State;
 }
 
-void evaluateButton4(const int button4State, int *const lastButton4State, bool *const BuzzerState, float *const lower_sound_thresh, float *const upper_sound_thresh, float *const lower_drugsound_thresh,
+void evaluateButton4(const int menu, const int button4State, int *const lastButton4State, bool *const BuzzerState, float *const lower_sound_thresh, float *const upper_sound_thresh, float *const lower_drugsound_thresh,
                      float *const upper_drugsound_thresh, const double newFlowRate, const double DrugFlowRate, const int allowableFlowRateSelector) {
-  if (*lastButton4State != LOW && button4State == LOW) {
+  if (*lastButton4State != LOW && button4State == LOW && Menu == flow_rate_page) {
     *BuzzerState = !(*BuzzerState);
     *lower_sound_thresh = newFlowRate * (1 - (float)allowableFlowRateSelector / 100);
     *upper_sound_thresh = newFlowRate * (1 + (float)allowableFlowRateSelector / 100);
