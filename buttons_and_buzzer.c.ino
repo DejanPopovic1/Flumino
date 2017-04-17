@@ -1,5 +1,15 @@
-#define MAXIMUM_CYCLE_TIME  20000
-#define DISPLAY_PERIOD      2000000
+#define MAXIMUM_CYCLE_TIME                  20000
+#define DISPLAY_PERIOD                      2000000
+#define ALARM_DEVIATION_LOWER_BOUND         1
+#define ALARM_DEVIATION_UPPER_BOUND         100
+#define DRUG_UG_MASS_DEVIATION_LOWER_BOUND  1
+#define DRUG_UG_MASS_DEVIATION_UPPER_BOUND  100
+#define DRUG_MG_MASS_DEVIATION_LOWER_BOUND  1
+#define DRUG_MG_MASS_DEVIATION_UPPER_BOUND  100
+#define PATIENT_MASS_LOWER_BOUND            1
+#define PATIENT_MASS_UPPER_BOUND            500
+#define VOLUME_DILUTANT_LOWER_BOUND         1
+#define VOLUME_DILUTANT_UPPER_BOUND         1000
 
 bool evaluateSensor(const int previoiusSensorReading, const int sensorReading) {
   if (previoiusSensorReading == HIGH && sensorReading == LOW) {
@@ -67,33 +77,33 @@ void evaluateButton2(const int button2State, int *lastButton2State, const int Me
         (*inputDrugMassUOMSelector)++;
 
     else if (Menu == 5 && *inputDrugMassUOMSelector == 0)
-      if (*drugMassUgSelector >= 100)
-        *drugMassUgSelector = 0;
+      if (*drugMassUgSelector >= DRUG_UG_MASS_DEVIATION_UPPER_BOUND)
+        *drugMassUgSelector = DRUG_UG_MASS_DEVIATION_LOWER_BOUND;
 
       else
         (*drugMassUgSelector)++;
 
     else if (Menu == 5 && *inputDrugMassUOMSelector == 1)
-      if (*drugMassMgSelector >= 100)
-        *drugMassMgSelector = 0;
+      if (*drugMassMgSelector >= DRUG_MG_MASS_DEVIATION_UPPER_BOUND)
+        *drugMassMgSelector = DRUG_MG_MASS_DEVIATION_LOWER_BOUND;
       else
         (*drugMassMgSelector)++;
 
     else if (Menu == 6)
-      if (*patientMassSelector >= 500)
-        *patientMassSelector = 0;
+      if (*patientMassSelector >= PATIENT_MASS_UPPER_BOUND)
+        *patientMassSelector = PATIENT_MASS_LOWER_BOUND;
       else
         (*patientMassSelector)++;
 
     else if (Menu == 7)
-      if (*volumeDilutantSelector >= 1000)
-        *volumeDilutantSelector = 0;
+      if (*volumeDilutantSelector >= VOLUME_DILUTANT_UPPER_BOUND)
+        *volumeDilutantSelector = VOLUME_DILUTANT_LOWER_BOUND;
       else
         (*volumeDilutantSelector)++;
 
     else if (Menu == 1)
-      if (*allowableFlowRateSelector >= 100)
-        *allowableFlowRateSelector = 0;
+      if (*allowableFlowRateSelector >= ALARM_DEVIATION_UPPER_BOUND)
+        *allowableFlowRateSelector = ALARM_DEVIATION_LOWER_BOUND;
       else
         (*allowableFlowRateSelector)++;
 
@@ -139,31 +149,31 @@ void evaluateButton3(const int button3State, int *lastButton3State, const int Me
       else
         (*inputDrugMassUOMSelector)--;
 
-    else if (Menu == 5 && *inputDrugMassUOMSelector == 0)
-      if (*drugMassUgSelector == 0)
-        *drugMassUgSelector = 100;
+    else if (Menu == 5 && *inputDrugMassUOMSelector == 1)
+      if (*drugMassUgSelector == DRUG_UG_MASS_DEVIATION_LOWER_BOUND)
+        *drugMassUgSelector = DRUG_UG_MASS_DEVIATION_UPPER_BOUND;
       else
         (*drugMassUgSelector)--;
     else if (Menu == 5 && *inputDrugMassUOMSelector == 1)
-      if (*drugMassMgSelector == 0)
-        *drugMassMgSelector = 100;
+      if (*drugMassMgSelector == DRUG_MG_MASS_DEVIATION_LOWER_BOUND)
+        *drugMassMgSelector = DRUG_MG_MASS_DEVIATION_UPPER_BOUND;
       else
         (*drugMassMgSelector)--;
 
     else if (Menu == 6)
-      if (*patientMassSelector == 0)
-        *patientMassSelector = 500;
+      if (*patientMassSelector == PATIENT_MASS_LOWER_BOUND)
+        *patientMassSelector = PATIENT_MASS_UPPER_BOUND;
       else
         (*patientMassSelector)--;
 
     else if (Menu == 7)
-      if (*volumeDilutantSelector == 0)
-        *volumeDilutantSelector = 1000;
+      if (*volumeDilutantSelector == VOLUME_DILUTANT_LOWER_BOUND)
+        *volumeDilutantSelector = VOLUME_DILUTANT_UPPER_BOUND;
       else
         (*volumeDilutantSelector)--;
 
     else if (Menu == 1)
-      if (*allowableFlowRateSelector == 0)
+      if (*allowableFlowRateSelector == 1)
         *allowableFlowRateSelector = 100;
       else
         (*allowableFlowRateSelector)--;
