@@ -9,6 +9,18 @@ bool evaluateSensor(const int previoiusSensorReading, const int sensorReading) {
   }
 }
 
+void evaluateFlowRate(bool isDropPassing, double *DisplayedFlowRate, unsigned long *previousTime, unsigned long currentTime, int dropsPerMillilitre, double *newFlowRate, unsigned long *period) {
+if (isDropPassing == true) {
+    *newFlowRate = flowRate(previousTime, currentTime, dropsPerMillilitre, newFlowRate, period);
+  }
+  if (currentTime >= *previousTime + *period) {
+    *newFlowRate =  decayedFlowRate(*previousTime, currentTime, dropsPerMillilitre, *period);
+  }
+  if (currentTime % DISPLAY_PERIOD <= MAXIMUM_CYCLE_TIME) {
+    *DisplayedFlowRate = *newFlowRate;
+  }
+}
+
 void evaluateButton1(const int button1State, int *lastButton1State, int *button1PushCounter, const int show_dose) {
   if (*lastButton1State != LOW && button1State == LOW) {
     if (*button1PushCounter == 8)

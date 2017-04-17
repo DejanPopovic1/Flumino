@@ -97,15 +97,9 @@ void loop()
   readPins(&sensorReading, &button1State, &button2State, &button3State, &button4State, analogInPin, Button1InPin, Button2InPin, Button3InPin, Button4InPin);
   isDropPassing = evaluateSensor(previoiusSensorReading, sensorReading);
 
-if (isDropPassing == true) {
-    newFlowRate = flowRate(&previousTime, currentTime, dropsPerMillilitre, &newFlowRate, &period);
-  }
-  if (currentTime >= previousTime + period) {
-    newFlowRate =  decayedFlowRate(previousTime, currentTime, dropsPerMillilitre, period);
-  }
-  if (currentTime % DISPLAY_PERIOD <= MAXIMUM_CYCLE_TIME) {
-    DisplayedFlowRate = newFlowRate;
-  }
+
+  evaluateFlowRate(isDropPassing, &DisplayedFlowRate, &previousTime, currentTime, dropsPerMillilitre, &newFlowRate, &period);
+
 
   DrugFlowRate = drugFlowRate(inputDrugMassUOMSelector, dose_shown, drugMassUgSelector, newFlowRate, volumeDilutantSelector, patientMassSelector, drugMassMgSelector);
   evaluateButton1(button1State, &lastButton1State, &button1PushCounter, show_dose);
