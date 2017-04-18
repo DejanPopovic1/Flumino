@@ -1,5 +1,6 @@
 #define MAXIMUM_CYCLE_TIME                  20000
 #define DISPLAY_PERIOD                      2000000
+
 #define ALARM_DEVIATION_LOWER_BOUND         1
 #define ALARM_DEVIATION_UPPER_BOUND         100
 #define DRUG_UG_MASS_DEVIATION_LOWER_BOUND  1
@@ -10,6 +11,14 @@
 #define PATIENT_MASS_UPPER_BOUND            500
 #define VOLUME_DILUTANT_LOWER_BOUND         1
 #define VOLUME_DILUTANT_UPPER_BOUND         1000
+
+#define BUTTON_HELD_TRIGGER_INCREMENT_TIME 500000
+#define BUTTON_HELD_INCREMENT_TIME 500000
+#define BUTTON_HELD_INCREMENT_TIME_ALARM_DEVIATION 1
+#define BUTTON_HELD_INCREMENT_DRUG_MASS_UG 10
+#define BUTTON_HELD_INCREMENT_DRUG_MASS_MG 10
+#define BUTTON_HELD_INCREMENT_PATIENT_MASS 5
+#define BUTTON_HELD_INCREMENT_VOLUME_DILUTANT 50
 
 bool evaluateSensor(const int previoiusSensorReading, const int sensorReading) {
   if (previoiusSensorReading == HIGH && sensorReading == LOW) {
@@ -50,9 +59,23 @@ void evaluateButton1(const int button1State, int *lastButton1State, int *button1
   *lastButton1State = button1State;
 }
 
-void evaluateButton2(const int button2State, int *lastButton2State, const int Menu, int *const dropsPerMillilitreSelector, int *const inputDrugMassUOMSelector, int *const drugMassMgSelector, int *const drugMassUgSelector, int *const patientMassSelector,
-                     int *const volumeDilutantSelector, int *const allowableFlowRateSelector, int *const show_dose, int *const dose_shown, int *const dropsPerMillilitre) {
+void evaluateButton2(const int button2State, int *lastButton2State, const int Menu, int *const dropsPerMillilitreSelector, int *const inputDrugMassUOMSelector, int *const drugMassMgSelector, int *const drugMassUgSelector,
+                     int *const patientMassSelector, int *const volumeDilutantSelector, int *const allowableFlowRateSelector, int *const show_dose, int *const dose_shown, int *const dropsPerMillilitre, unsigned long *button2PressedTime) {
+  static unsigned long button2HeldTime = 0;
+  static bool button2HeldFlag = false;
+
+  if (*lastButton2State == LOW && button2State != LOW) {
+    button2HeldFlag = false;
+  }
+  else if (*lastButton2State == LOW && button2State == LOW) {
+    button2HeldTime = micros();
+    if (button2HeldTime - *button2PressedTime >= BUTTON_HELD_TRIGGER_INCREMENT_TIME) {
+      button2HeldFlag = true;
+    }
+  }
+
   if (*lastButton2State != LOW && button2State == LOW) {
+    *button2PressedTime = micros();
     if (Menu == 0) {
       if (*dropsPerMillilitreSelector >= 2)
         *dropsPerMillilitreSelector = 0;
@@ -123,8 +146,8 @@ void evaluateButton2(const int button2State, int *lastButton2State, const int Me
   *lastButton2State = button2State;
 }
 
-void evaluateButton3(const int button3State, int *lastButton3State, const int Menu, int *const dropsPerMillilitreSelector, int *const inputDrugMassUOMSelector, int *const drugMassMgSelector, int *const drugMassUgSelector, int *const patientMassSelector,
-                     int *const volumeDilutantSelector, int *const allowableFlowRateSelector, int *const show_dose, int *const dose_shown, int *const dropsPerMillilitre) {
+void evaluateButton3(const int button3State, int *lastButton3State, const int Menu, int *const dropsPerMillilitreSelector, int *const inputDrugMassUOMSelector, int *const drugMassMgSelector, int *const drugMassUgSelector,
+                     int *const patientMassSelector, int *const volumeDilutantSelector, int *const allowableFlowRateSelector, int *const show_dose, int *const dose_shown, int *const dropsPerMillilitre) {
   if (*lastButton3State != LOW && button3State == LOW) {
     if (Menu == 0) {
       if (*dropsPerMillilitreSelector == 0)

@@ -75,6 +75,8 @@ double newFlowRate = 180;
 unsigned long previousTime = 0;
 bool isDropPassing = false;
 
+unsigned long button2PressedTime = 0;
+
 void readPins(int *const, int *const, int *const, int *const, int *const, const int, const int, const int, const int, const int);
 
 void setup()
@@ -98,7 +100,7 @@ void loop()
   evaluateFlowRate(isDropPassing, &DisplayedFlowRate, &previousTime, currentTime, dropsPerMillilitre, &newFlowRate, &period);
   DrugFlowRate = drugFlowRate(inputDrugMassUOMSelector, dose_shown, drugMassUgSelector, DisplayedFlowRate, volumeDilutantSelector, patientMassSelector, drugMassMgSelector);
   evaluateButton1(button1State, &lastButton1State, &button1PushCounter, show_dose);
-  evaluateButton2(button2State, &lastButton2State, Menu, &dropsPerMillilitreSelector, &inputDrugMassUOMSelector, &drugMassMgSelector, &drugMassUgSelector, &patientMassSelector, &volumeDilutantSelector, &allowableFlowRateSelector, &show_dose, &dose_shown, &dropsPerMillilitre);
+  evaluateButton2(button2State, &lastButton2State, Menu, &dropsPerMillilitreSelector, &inputDrugMassUOMSelector, &drugMassMgSelector, &drugMassUgSelector, &patientMassSelector, &volumeDilutantSelector, &allowableFlowRateSelector, &show_dose, &dose_shown, &dropsPerMillilitre, &button2PressedTime);
   evaluateButton3(button3State, &lastButton3State, Menu, &dropsPerMillilitreSelector, &inputDrugMassUOMSelector, &drugMassMgSelector, &drugMassUgSelector, &patientMassSelector, &volumeDilutantSelector, &allowableFlowRateSelector, &show_dose, &dose_shown, &dropsPerMillilitre);
   evaluateButton4(Menu, button4State, &lastButton4State, &BuzzerState, &lower_sound_thresh, &upper_sound_thresh, &lower_drugsound_thresh, &upper_drugsound_thresh, newFlowRate, DrugFlowRate, allowableFlowRateSelector);
   evaluateBuzzer(BuzzerState, DisplayedFlowRate, lower_sound_thresh, upper_sound_thresh, BuzzerPin);
