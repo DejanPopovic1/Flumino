@@ -56,7 +56,6 @@ void evaluateButton1(const int button1State, int *lastButton1State, int *button1
       (*button1PushCounter)++;
     }
   }
-  *lastButton1State = button1State;
 }
 
 void evaluateButton2(const int button2State, int *lastButton2State, const int Menu, int *const dropsPerMillilitreSelector, int *const inputDrugMassUOMSelector, int *const drugMassMgSelector, int *const drugMassUgSelector,
@@ -143,7 +142,6 @@ void evaluateButton2(const int button2State, int *lastButton2State, const int Me
         (*dose_shown)++;
     delay(1);
   }
-  *lastButton2State = button2State;
 }
 
 void evaluateButton3(const int button3State, int *lastButton3State, const int Menu, int *const dropsPerMillilitreSelector, int *const inputDrugMassUOMSelector, int *const drugMassMgSelector, int *const drugMassUgSelector,
@@ -172,7 +170,7 @@ void evaluateButton3(const int button3State, int *lastButton3State, const int Me
       else
         (*inputDrugMassUOMSelector)--;
 
-    else if (Menu == 5 && *inputDrugMassUOMSelector == 1)
+    else if (Menu == 5 && *inputDrugMassUOMSelector == 0)
       if (*drugMassUgSelector == DRUG_UG_MASS_DEVIATION_LOWER_BOUND)
         *drugMassUgSelector = DRUG_UG_MASS_DEVIATION_UPPER_BOUND;
       else
@@ -214,7 +212,6 @@ void evaluateButton3(const int button3State, int *lastButton3State, const int Me
         (*dose_shown)--;
     delay(1);
   }
-  *lastButton3State = button3State;
 }
 
 void evaluateButton4(const int menu, const int button4State, int *const lastButton4State, bool *const BuzzerState, float *const lower_sound_thresh, float *const upper_sound_thresh, float *const lower_drugsound_thresh,
@@ -226,7 +223,6 @@ void evaluateButton4(const int menu, const int button4State, int *const lastButt
     *lower_drugsound_thresh = DrugFlowRate * (1 - (float)allowableFlowRateSelector / 100);
     *upper_drugsound_thresh = DrugFlowRate * (1 + (float)allowableFlowRateSelector / 100);
   }
-  *lastButton4State = button4State;
 }
 
 void evaluateBuzzer(const bool BuzzerState, const double DisplayedFlowRate, const float lower_sound_thresh, const float upper_sound_thresh, const int BuzzerPin) {

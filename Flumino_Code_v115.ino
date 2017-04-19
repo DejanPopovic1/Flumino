@@ -77,7 +77,7 @@ bool isDropPassing = false;
 
 unsigned long button2PressedTime = 0;
 
-void readPins(int *const, int *const, int *const, int *const, int *const, const int, const int, const int, const int, const int);
+void readState(int *const, int *const, int *const, int *const, int *const, const int, const int, const int, const int, const int);
 
 void setup()
 {
@@ -94,8 +94,8 @@ unsigned long currentTime;
 void loop()
 {
   currentTime = micros();
+  readState(&sensorReading, &button1State, &button2State, &button3State, &button4State, analogInPin, Button1InPin, Button2InPin, Button3InPin, Button4InPin);
   delayMicroseconds(1);
-  readPins(&sensorReading, &button1State, &button2State, &button3State, &button4State, analogInPin, Button1InPin, Button2InPin, Button3InPin, Button4InPin);
   isDropPassing = evaluateSensor(previoiusSensorReading, sensorReading);
   evaluateFlowRate(isDropPassing, &DisplayedFlowRate, &previousTime, currentTime, dropsPerMillilitre, &newFlowRate, &period);
   DrugFlowRate = drugFlowRate(inputDrugMassUOMSelector, dose_shown, drugMassUgSelector, DisplayedFlowRate, volumeDilutantSelector, patientMassSelector, drugMassMgSelector);
@@ -109,15 +109,27 @@ void loop()
   Menu = button1PushCounter;
   printToScreen(Menu, dropsPerMillilitreSelector, allowableFlowRateSelector, show_dose, dose_shown, inputDrugMassUOMSelector, drugMassUgSelector, drugMassMgSelector, patientMassSelector, volumeDilutantSelector,
                 DisplayedFlowRate, BuzzerState, lower_sound_thresh, upper_sound_thresh, lower_drugsound_thresh, upper_drugsound_thresh);
-  delay(6);
+  delay(6); 
+  saveState(&lastButton1State, &lastButton2State, &lastButton3State, &lastButton4State, button1State, button2State, button3State, button4State);
 }
 
-void readPins(int *const sensorReading, int *const button1State, int *const button2State, int *const button3State, int *const button4State, const int analogInPin, const int Button1InPin, const int Button2InPin,
+void readState(int *const sensorReading, int *const button1State, int *const button2State, int *const button3State, int *const button4State, const int analogInPin, const int Button1InPin, const int Button2InPin,
               const int Button3InPin, const int Button4InPin) {
-  if (analogRead(analogInPin) >= SENSOR_THRESHOLD){
+  readPins(analogInPin, Button1InPin, Button2InPin, Button3InPin, Button4InPin, sensorReading, button1State, button2State, button3State, button4State);
+}
+
+void saveState(int *lastButton1State, int *lastButton2State, int *lastButton3State, int *lastButton4State, int button1State, int button2State, int button3State, int button4State) {
+  *lastButton1State = button1State;
+  *lastButton2State = button2State;
+  *lastButton3State = button3State;
+  *lastButton4State = button4State;
+}
+
+void readPins(int analogInPin, int Button1InPin, int Button2InPin, int Button3InPin, int Button4InPin, int *sensorReading, int *button1State, int *button2State, int *button3State, int *button4State) {
+    if (analogRead(analogInPin) >= SENSOR_THRESHOLD) {
     *sensorReading = HIGH;
   }
-  else{
+  else {
     *sensorReading = LOW;
   }
   *button1State = analogRead(Button1InPin);
@@ -125,4 +137,3 @@ void readPins(int *const sensorReading, int *const button1State, int *const butt
   *button3State = analogRead(Button3InPin);
   *button4State = digitalRead(Button4InPin);
 }
-
