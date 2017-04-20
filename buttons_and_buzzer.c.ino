@@ -62,17 +62,7 @@ void evaluateButton2(struct MachineState *s) {
   static unsigned long button2HeldTime = 0;
   static bool button2HeldFlag = false;
 
-  if (s->lastButton2State == LOW && s->button2State != LOW) {
-    button2HeldFlag = false;
-  }
-  else if (s->lastButton2State == LOW && s->button2State == LOW) {
-    button2HeldTime = micros();
-    if (button2HeldTime - s->button2PressedTime >= BUTTON_HELD_TRIGGER_INCREMENT_TIME) {
-      button2HeldFlag = true;
-    }
-  }
-
-  if (s->lastButton2State != LOW && s->button2State == LOW) {
+  if (s->button2Status == BUTTON_PRESSED || s->button2Status == BUTTON_INCREMENTED) {
     s->button2PressedTime = micros();
     if (s->Menu == 0) {
       if (s->dropsPerMillilitreSelector >= 2)

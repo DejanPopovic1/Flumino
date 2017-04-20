@@ -9,10 +9,26 @@
 
 #define SENSOR_THRESHOLD 600
 
+#define BUTTON_HELD_TRIGGER_INCREMENT_TIME 500000
+#define BUTTON_HELD_INCREMENT_TIME 500000
+#define BUTTON_HELD_INCREMENT_TIME_ALARM_DEVIATION 1
+#define BUTTON_HELD_INCREMENT_DRUG_MASS_UG 10
+#define BUTTON_HELD_INCREMENT_DRUG_MASS_MG 10
+#define BUTTON_HELD_INCREMENT_PATIENT_MASS 5
+#define BUTTON_HELD_INCREMENT_VOLUME_DILUTANT 50
+
 const int analogInPin           = A1;  // Analog input pin that the potentiometer is attached to
 const int BuzzerPin             = 3;
 
 Adafruit_SharpMem display(SCK, MOSI, SS);  //For the SPI BUS
+
+enum button_state {
+  BUTTON_PRESSED,
+  BUTTON_RELEASED,
+  BUTTON_HELD,
+  BUTTON_UNTOUCHED,
+  BUTTON_INCREMENTED
+};
 
 struct MachineState {
   int Menu;
@@ -34,21 +50,26 @@ struct MachineState {
   int button1PushCounter          = 8;
   int button1State                = 0;
   int lastButton1State            = 0;
+  int button1Status = BUTTON_UNTOUCHED;
   //------Button-2-Code-----------------
   const int Button2InPin          = A2;
   int button2PushCounter          = 1;
   int button2State                = 0;
   int lastButton2State            = 0;
+  int button2Status = BUTTON_UNTOUCHED;
+  unsigned long button2HeldTime   = 0;
   //------Button-3-Code-----------------
   const int Button3InPin          = A3;
   int button3PushCounter          = 1;
   int button3State                = 0;
   int lastButton3State            = 0;
+  int button3Status = BUTTON_UNTOUCHED;
   //------Button-4-Code-----------------
   const int Button4InPin          = 2;
   int button4PushCounter          = false;
   int button4State                = 0;
   int lastButton4State            = 1;
+  int button4Status = BUTTON_UNTOUCHED;
   //--------Menu-Variable-Counters-------//
   int dropsPerMillilitreSelector  = 1;
   int inputDrugMassUOMSelector    = 0;
@@ -101,7 +122,6 @@ void loop()
 {
   currentMachineState.currentTime = micros();
   readState(&currentMachineState);
-  delayMicroseconds(1);
   isDropPassing = evaluateSensor(&currentMachineState);
   evaluateFlowRate(isDropPassing, &currentMachineState);
   drugFlowRate(&currentMachineState);
@@ -113,14 +133,34 @@ void loop()
   display.clearDisplay();
   currentMachineState.Menu = currentMachineState.button1PushCounter;
   printToScreen(&currentMachineState);
-  delay(6);
   currentMachineState.previoiusSensorReading = currentMachineState.sensorReading;
   saveState(&currentMachineState);
 }
 
-
-void readState(struct MachineState *currentMachineState) {
-  readPins(currentMachineState);
+void readState(struct MachineState *s) {
+  readPins(s);
+  if (s->lastButton2State == LOW && s->button2State != LOW) {
+    s->button2Status = BUTTON_RELEASED;
+  }
+  else if (s->lastButton2State == LOW && s->button2State == LOW) {
+    s->button2HeldTime = micros();
+    s->button2Status = BUTTON_HELD;
+    //incrementFunctionPointer = smallIncrement;
+    if (s->button2HeldTime - s->button2PressedTime >= BUTTON_HELD_TRIGGER_INCREMENT_TIME) {
+      s->button2Status = BUTTON_INCREMENTED;
+      s->button2PressedTime = micros();
+      //incrementFunctionPointer = largeIncrement; //Point function pointer to point to large increment function
+    }
+  }
+  else if (s->lastButton2State != LOW && s->button2State == LOW) {
+    s->button2Status = BUTTON_PRESSED;
+    s->button2PressedTime = micros();
+    //incrementFunctionPointer = smallIncrement; //Point function pointer to point to small increment function
+  }
+  else if (s->lastButton2State != LOW && s->button2State != LOW) {
+    s->button2Status = BUTTON_UNTOUCHED;
+  } 
+  Serial.println(s->button2Status);
 }
 
 void saveState(struct MachineState *currentMachineState) {

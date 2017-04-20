@@ -332,4 +332,5 @@ void printToScreen(struct MachineState *currentMachineState) {
     default:
       break;
   }
+    delay(10);
 }
