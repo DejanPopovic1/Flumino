@@ -20,8 +20,8 @@
 #define BUTTON_HELD_INCREMENT_PATIENT_MASS 5
 #define BUTTON_HELD_INCREMENT_VOLUME_DILUTANT 50
 
-bool evaluateSensor(const int previoiusSensorReading, const int sensorReading) {
-  if (previoiusSensorReading == HIGH && sensorReading == LOW) {
+bool evaluateSensor(struct MachineState *s) {
+  if (s->previoiusSensorReading == HIGH && s->sensorReading == LOW) {
     return true;
   }
   else {
@@ -29,204 +29,201 @@ bool evaluateSensor(const int previoiusSensorReading, const int sensorReading) {
   }
 }
 
-void evaluateFlowRate(bool isDropPassing, double *DisplayedFlowRate, unsigned long *previousTime, unsigned long currentTime, int dropsPerMillilitre, double *newFlowRate, unsigned long *period) {
+void evaluateFlowRate(bool isDropPassing, struct MachineState *s) {
   if (isDropPassing == true) {
-    *newFlowRate = flowRate(previousTime, currentTime, dropsPerMillilitre, newFlowRate, period);
+    s->newFlowRate = flowRate(s);
   }
-  if (currentTime >= *previousTime + *period) {
-    *newFlowRate =  decayedFlowRate(*previousTime, currentTime, dropsPerMillilitre, *period);
+  if (s->currentTime >= s->previousTime + s->period) {
+    s->newFlowRate =  decayedFlowRate(s->previousTime, s->currentTime, s->dropsPerMillilitre, s->period);
   }
-  if (currentTime % DISPLAY_PERIOD <= MAXIMUM_CYCLE_TIME) {
-    *DisplayedFlowRate = *newFlowRate;
+  if (s->currentTime % DISPLAY_PERIOD <= MAXIMUM_CYCLE_TIME) {
+    s->DisplayedFlowRate = s->newFlowRate;
   }
 }
 
-void evaluateButton1(const int button1State, int *lastButton1State, int *button1PushCounter, const int show_dose) {
-  if (*lastButton1State != LOW && button1State == LOW) {
-    if (*button1PushCounter == 8)
+void evaluateButton1(struct MachineState *s) {
+  if (s->lastButton1State != LOW && s->button1State == LOW) {
+    if (s->button1PushCounter == 8)
     {
-      *button1PushCounter = 0;
+      s->button1PushCounter = 0;
     }
-    else if (*button1PushCounter == 2 && show_dose == false)
+    else if (s->button1PushCounter == 2 && s->show_dose == false)
     {
-      *button1PushCounter = 8;
+      s->button1PushCounter = 8;
     }
     else
     {
-      (*button1PushCounter)++;
+      (s->button1PushCounter)++;
     }
   }
 }
 
-void evaluateButton2(const int button2State, int *lastButton2State, const int Menu, int *const dropsPerMillilitreSelector, int *const inputDrugMassUOMSelector, int *const drugMassMgSelector, int *const drugMassUgSelector,
-                     int *const patientMassSelector, int *const volumeDilutantSelector, int *const allowableFlowRateSelector, int *const show_dose, int *const dose_shown, int *const dropsPerMillilitre, unsigned long *button2PressedTime) {
+void evaluateButton2(struct MachineState *s) {
   static unsigned long button2HeldTime = 0;
   static bool button2HeldFlag = false;
 
-  if (*lastButton2State == LOW && button2State != LOW) {
+  if (s->lastButton2State == LOW && s->button2State != LOW) {
     button2HeldFlag = false;
   }
-  else if (*lastButton2State == LOW && button2State == LOW) {
+  else if (s->lastButton2State == LOW && s->button2State == LOW) {
     button2HeldTime = micros();
-    if (button2HeldTime - *button2PressedTime >= BUTTON_HELD_TRIGGER_INCREMENT_TIME) {
+    if (button2HeldTime - s->button2PressedTime >= BUTTON_HELD_TRIGGER_INCREMENT_TIME) {
       button2HeldFlag = true;
     }
   }
 
-  if (*lastButton2State != LOW && button2State == LOW) {
-    *button2PressedTime = micros();
-    if (Menu == 0) {
-      if (*dropsPerMillilitreSelector >= 2)
-        *dropsPerMillilitreSelector = 0;
+  if (s->lastButton2State != LOW && s->button2State == LOW) {
+    s->button2PressedTime = micros();
+    if (s->Menu == 0) {
+      if (s->dropsPerMillilitreSelector >= 2)
+        s->dropsPerMillilitreSelector = 0;
       else
-        (*dropsPerMillilitreSelector)++;
-      switch (*dropsPerMillilitreSelector) {
+        (s->dropsPerMillilitreSelector)++;
+      switch (s->dropsPerMillilitreSelector) {
         case 0:
-          *dropsPerMillilitre = 10;
+          s->dropsPerMillilitre = 10;
           break;
         case 1:
-          *dropsPerMillilitre = 20;
+          s->dropsPerMillilitre = 20;
           break;
         case 2:
-          *dropsPerMillilitre = 60;
+          s->dropsPerMillilitre = 60;
           break;
       }
     }
-    else if (Menu == 4)
-      if (*inputDrugMassUOMSelector >= 1)
-        *inputDrugMassUOMSelector = 0;
+    else if (s->Menu == 4)
+      if (s->inputDrugMassUOMSelector >= 1)
+        s->inputDrugMassUOMSelector = 0;
       else
-        (*inputDrugMassUOMSelector)++;
+        (s->inputDrugMassUOMSelector)++;
 
-    else if (Menu == 5 && *inputDrugMassUOMSelector == 0)
-      if (*drugMassUgSelector >= DRUG_UG_MASS_DEVIATION_UPPER_BOUND)
-        *drugMassUgSelector = DRUG_UG_MASS_DEVIATION_LOWER_BOUND;
+    else if (s->Menu == 5 && s->inputDrugMassUOMSelector == 0)
+      if (s->drugMassUgSelector >= DRUG_UG_MASS_DEVIATION_UPPER_BOUND)
+        s->drugMassUgSelector = DRUG_UG_MASS_DEVIATION_LOWER_BOUND;
 
       else
-        (*drugMassUgSelector)++;
+        (s->drugMassUgSelector)++;
 
-    else if (Menu == 5 && *inputDrugMassUOMSelector == 1)
-      if (*drugMassMgSelector >= DRUG_MG_MASS_DEVIATION_UPPER_BOUND)
-        *drugMassMgSelector = DRUG_MG_MASS_DEVIATION_LOWER_BOUND;
+    else if (s->Menu == 5 && s->inputDrugMassUOMSelector == 1)
+      if (s->drugMassMgSelector >= DRUG_MG_MASS_DEVIATION_UPPER_BOUND)
+        s->drugMassMgSelector = DRUG_MG_MASS_DEVIATION_LOWER_BOUND;
       else
-        (*drugMassMgSelector)++;
+        (s->drugMassMgSelector)++;
 
-    else if (Menu == 6)
-      if (*patientMassSelector >= PATIENT_MASS_UPPER_BOUND)
-        *patientMassSelector = PATIENT_MASS_LOWER_BOUND;
+    else if (s->Menu == 6)
+      if (s->patientMassSelector >= PATIENT_MASS_UPPER_BOUND)
+        s->patientMassSelector = PATIENT_MASS_LOWER_BOUND;
       else
-        (*patientMassSelector)++;
+        (s->patientMassSelector)++;
 
-    else if (Menu == 7)
-      if (*volumeDilutantSelector >= VOLUME_DILUTANT_UPPER_BOUND)
-        *volumeDilutantSelector = VOLUME_DILUTANT_LOWER_BOUND;
+    else if (s->Menu == 7)
+      if (s->volumeDilutantSelector >= VOLUME_DILUTANT_UPPER_BOUND)
+        s->volumeDilutantSelector = VOLUME_DILUTANT_LOWER_BOUND;
       else
-        (*volumeDilutantSelector)++;
+        (s->volumeDilutantSelector)++;
 
-    else if (Menu == 1)
-      if (*allowableFlowRateSelector >= ALARM_DEVIATION_UPPER_BOUND)
-        *allowableFlowRateSelector = ALARM_DEVIATION_LOWER_BOUND;
+    else if (s->Menu == 1)
+      if (s->allowableFlowRateSelector >= ALARM_DEVIATION_UPPER_BOUND)
+        s->allowableFlowRateSelector = ALARM_DEVIATION_LOWER_BOUND;
       else
-        (*allowableFlowRateSelector)++;
+        (s->allowableFlowRateSelector)++;
 
-    else if (Menu == 2)
-      if (*show_dose == true)
-        *show_dose = false;
+    else if (s->Menu == 2)
+      if (s->show_dose == true)
+        s->show_dose = false;
       else
-        *show_dose = true;
+        s->show_dose = true;
 
-    else if (Menu == 3)
-      if (*dose_shown >= 2)
-        *dose_shown = 0;
+    else if (s->Menu == 3)
+      if (s->dose_shown >= 2)
+        s->dose_shown = 0;
       else
-        (*dose_shown)++;
+        (s->dose_shown)++;
     delay(1);
   }
 }
 
-void evaluateButton3(const int button3State, int *lastButton3State, const int Menu, int *const dropsPerMillilitreSelector, int *const inputDrugMassUOMSelector, int *const drugMassMgSelector, int *const drugMassUgSelector,
-                     int *const patientMassSelector, int *const volumeDilutantSelector, int *const allowableFlowRateSelector, int *const show_dose, int *const dose_shown, int *const dropsPerMillilitre) {
-  if (*lastButton3State != LOW && button3State == LOW) {
-    if (Menu == 0) {
-      if (*dropsPerMillilitreSelector == 0)
-        *dropsPerMillilitreSelector = 2;
+void evaluateButton3(struct MachineState *s) {
+  if (s->lastButton3State != LOW && s->button3State == LOW) {
+    if (s->Menu == 0) {
+      if (s->dropsPerMillilitreSelector == 0)
+        s->dropsPerMillilitreSelector = 2;
       else
-        (*dropsPerMillilitreSelector)--;
-      switch (*dropsPerMillilitreSelector) {
+        (s->dropsPerMillilitreSelector)--;
+      switch (s->dropsPerMillilitreSelector) {
         case 0:
-          *dropsPerMillilitre = 10;
+          s->dropsPerMillilitre = 10;
           break;
         case 1:
-          *dropsPerMillilitre = 20;
+          s->dropsPerMillilitre = 20;
           break;
         case 2:
-          *dropsPerMillilitre = 60;
+          s->dropsPerMillilitre = 60;
           break;
       }
     }
-    else if (Menu == 4)
-      if (*inputDrugMassUOMSelector == 0)
-        *inputDrugMassUOMSelector = 1;
+    else if (s->Menu == 4)
+      if (s->inputDrugMassUOMSelector == 0)
+        s->inputDrugMassUOMSelector = 1;
       else
-        (*inputDrugMassUOMSelector)--;
+        (s->inputDrugMassUOMSelector)--;
 
-    else if (Menu == 5 && *inputDrugMassUOMSelector == 0)
-      if (*drugMassUgSelector == DRUG_UG_MASS_DEVIATION_LOWER_BOUND)
-        *drugMassUgSelector = DRUG_UG_MASS_DEVIATION_UPPER_BOUND;
+    else if (s->Menu == 5 && s->inputDrugMassUOMSelector == 0)
+      if (s->drugMassUgSelector == DRUG_UG_MASS_DEVIATION_LOWER_BOUND)
+        s->drugMassUgSelector = DRUG_UG_MASS_DEVIATION_UPPER_BOUND;
       else
-        (*drugMassUgSelector)--;
-    else if (Menu == 5 && *inputDrugMassUOMSelector == 1)
-      if (*drugMassMgSelector == DRUG_MG_MASS_DEVIATION_LOWER_BOUND)
-        *drugMassMgSelector = DRUG_MG_MASS_DEVIATION_UPPER_BOUND;
+        (s->drugMassUgSelector)--;
+    else if (s->Menu == 5 && s->inputDrugMassUOMSelector == 1)
+      if (s->drugMassMgSelector == DRUG_MG_MASS_DEVIATION_LOWER_BOUND)
+        s->drugMassMgSelector = DRUG_MG_MASS_DEVIATION_UPPER_BOUND;
       else
-        (*drugMassMgSelector)--;
+        (s->drugMassMgSelector)--;
 
-    else if (Menu == 6)
-      if (*patientMassSelector == PATIENT_MASS_LOWER_BOUND)
-        *patientMassSelector = PATIENT_MASS_UPPER_BOUND;
+    else if (s->Menu == 6)
+      if (s->patientMassSelector == PATIENT_MASS_LOWER_BOUND)
+        s->patientMassSelector = PATIENT_MASS_UPPER_BOUND;
       else
-        (*patientMassSelector)--;
+        (s->patientMassSelector)--;
 
-    else if (Menu == 7)
-      if (*volumeDilutantSelector == VOLUME_DILUTANT_LOWER_BOUND)
-        *volumeDilutantSelector = VOLUME_DILUTANT_UPPER_BOUND;
+    else if (s->Menu == 7)
+      if (s->volumeDilutantSelector == VOLUME_DILUTANT_LOWER_BOUND)
+        s->volumeDilutantSelector = VOLUME_DILUTANT_UPPER_BOUND;
       else
-        (*volumeDilutantSelector)--;
+        (s->volumeDilutantSelector)--;
 
-    else if (Menu == 1)
-      if (*allowableFlowRateSelector == 1)
-        *allowableFlowRateSelector = 100;
+    else if (s->Menu == 1)
+      if (s->allowableFlowRateSelector == 1)
+        s->allowableFlowRateSelector = 100;
       else
-        (*allowableFlowRateSelector)--;
+        (s->allowableFlowRateSelector)--;
 
-    else if (Menu == 2)
-      if (*show_dose == true)
-        *show_dose = false;
+    else if (s->Menu == 2)
+      if (s->show_dose == true)
+        s->show_dose = false;
       else
-        *show_dose = true;
+        s->show_dose = true;
 
-    else if (Menu == 3)
-      if (*dose_shown == 0)
-        *dose_shown = 2;
+    else if (s->Menu == 3)
+      if (s->dose_shown == 0)
+        s->dose_shown = 2;
       else
-        (*dose_shown)--;
+        (s->dose_shown)--;
     delay(1);
   }
 }
 
-void evaluateButton4(const int menu, const int button4State, int *const lastButton4State, bool *const BuzzerState, float *const lower_sound_thresh, float *const upper_sound_thresh, float *const lower_drugsound_thresh,
-                     float *const upper_drugsound_thresh, const double newFlowRate, const double DrugFlowRate, const int allowableFlowRateSelector) {
-  if (*lastButton4State != LOW && button4State == LOW && Menu == flow_rate_page) {
-    *BuzzerState = !(*BuzzerState);
-    *lower_sound_thresh = newFlowRate * (1 - (float)allowableFlowRateSelector / 100);
-    *upper_sound_thresh = newFlowRate * (1 + (float)allowableFlowRateSelector / 100);
-    *lower_drugsound_thresh = DrugFlowRate * (1 - (float)allowableFlowRateSelector / 100);
-    *upper_drugsound_thresh = DrugFlowRate * (1 + (float)allowableFlowRateSelector / 100);
+void evaluateButton4(struct MachineState *s) {
+  if (s->lastButton4State != LOW && s->button4State == LOW && s->Menu == flow_rate_page) {
+    s->BuzzerState = !(s->BuzzerState);
+    s->lower_sound_thresh = s->newFlowRate * (1 - (float)s->allowableFlowRateSelector / 100);
+    s->upper_sound_thresh = s->newFlowRate * (1 + (float)s->allowableFlowRateSelector / 100);
+    s->lower_drugsound_thresh = s->DrugFlowRate * (1 - (float)s->allowableFlowRateSelector / 100);
+    s->upper_drugsound_thresh = s->DrugFlowRate * (1 + (float)s->allowableFlowRateSelector / 100);
   }
 }
 
-void evaluateBuzzer(const bool BuzzerState, const double DisplayedFlowRate, const float lower_sound_thresh, const float upper_sound_thresh, const int BuzzerPin) {
-  if (BuzzerState && (DisplayedFlowRate < lower_sound_thresh  || DisplayedFlowRate > upper_sound_thresh)) {
+void evaluateBuzzer(struct MachineState *s) {
+  if (s->BuzzerState && (s->DisplayedFlowRate < s->lower_sound_thresh  || s->DisplayedFlowRate > s->upper_sound_thresh)) {
     digitalWrite(BuzzerPin, HIGH );
   }
   else {
