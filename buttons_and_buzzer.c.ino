@@ -20,17 +20,17 @@
 #define BUTTON_HELD_INCREMENT_PATIENT_MASS 5
 #define BUTTON_HELD_INCREMENT_VOLUME_DILUTANT 50
 
-bool evaluateSensor(struct MachineState *s) {
-  if (s->previoiusSensorReading == HIGH && s->sensorReading == LOW) {
-    return true;
-  }
-  else {
-    return false;
-  }
-}
+//bool evaluateSensor(struct MachineState *s) {
+//  if (s->previoiusSensorReading == HIGH && s->sensorReading == LOW) {
+//    return true;
+//  }
+//  else {
+//    return false;
+//  }
+//}
 
-void evaluateFlowRate(bool isDropPassing, struct MachineState *s) {
-  if (isDropPassing == true) {
+void evaluateFlowRate(struct MachineState *s) {
+  if (s->sensorStatus == DROP_PASSING) {
     s->newFlowRate = flowRate(s);
   }
   if (s->currentTime >= s->previousTime + s->period) {

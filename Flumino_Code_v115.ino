@@ -17,8 +17,13 @@
 #define BUTTON_HELD_INCREMENT_PATIENT_MASS 5
 #define BUTTON_HELD_INCREMENT_VOLUME_DILUTANT 50
 
-const int analogInPin           = A1;  // Analog input pin that the potentiometer is attached to
+const int analogInPin           = A1;
 const int BuzzerPin             = 3;
+const int Button1InPin          = A0;
+const int Button2InPin          = A2;
+const int Button3InPin          = A3;
+const int Button4InPin          = 2;
+const int IROutPin              = 12;
 
 Adafruit_SharpMem display(SCK, MOSI, SS);  //For the SPI BUS
 
@@ -30,9 +35,14 @@ enum button_state {
   BUTTON_INCREMENTED
 };
 
+enum sensor_state {
+  DROP_PASSING,
+  DROP_NOT_PASSING
+};
+
 struct MachineState {
   int Menu;
-  int previoiusSensorReading      = 0;     // previous state of the button
+
   double DisplayedFlowRate;
   double DrugFlowRate             = 0;
   unsigned long period            = 0;
@@ -43,29 +53,30 @@ struct MachineState {
   float upper_sound_thresh        = 0;
   float lower_drugsound_thresh    = 0;
   float upper_drugsound_thresh    = 0;
+
+  int sensorStatus                = 0;
+  int lastSensorState             = 0;
+  int sensorState                 = 0;
+  int previoiusSensorReading      = 0;     // previous state of the button
   int sensorReading               = 0;
-  int IROutPin                    = 12;         // the number of the input pin
+  
   //------Button-1-Code-----------------
-  const int Button1InPin          = A0;
   int button1PushCounter          = 8;
   int button1State                = 0;
   int lastButton1State            = 0;
   int button1Status = BUTTON_UNTOUCHED;
   //------Button-2-Code-----------------
-  const int Button2InPin          = A2;
   int button2PushCounter          = 1;
   int button2State                = 0;
   int lastButton2State            = 0;
   int button2Status = BUTTON_UNTOUCHED;
   unsigned long button2HeldTime   = 0;
   //------Button-3-Code-----------------
-  const int Button3InPin          = A3;
   int button3PushCounter          = 1;
   int button3State                = 0;
   int lastButton3State            = 0;
   int button3Status = BUTTON_UNTOUCHED;
   //------Button-4-Code-----------------
-  const int Button4InPin          = 2;
   int button4PushCounter          = false;
   int button4State                = 0;
   int lastButton4State            = 1;
@@ -82,8 +93,6 @@ struct MachineState {
   bool BuzzerState = false;
   double newFlowRate = 180;
   unsigned long previousTime = 0;
-
-  
   unsigned long button2PressedTime = 0;
   unsigned long currentTime;
 };
@@ -101,11 +110,8 @@ enum menu_page {
 };
 
 void readState(int *const, int *const, int *const, int *const, int *const, const int, const int, const int, const int, const int);
-
 bool isDropPassing = false;
-
 struct MachineState currentMachineState;
-
 int (*incrementFunctionPointer)(int, int) = &smallIncrement;
 
 void setup()
@@ -116,16 +122,14 @@ void setup()
   pinMode(13, OUTPUT); //LED
   pinMode(3, OUTPUT);   //Buzzer
   pinMode(2, INPUT);   //Button 4
-  pinMode(currentMachineState.IROutPin, OUTPUT); //Infrared LED
+  pinMode(IROutPin, OUTPUT); //Infrared LED
 }
-
 
 void loop()
 {
   currentMachineState.currentTime = micros();
   readState(&currentMachineState);
-  isDropPassing = evaluateSensor(&currentMachineState);
-  evaluateFlowRate(isDropPassing, &currentMachineState);
+  evaluateFlowRate(&currentMachineState);
   drugFlowRate(&currentMachineState);
   evaluateButton1(&currentMachineState);
   evaluateButton2(&currentMachineState, incrementFunctionPointer);
@@ -161,10 +165,17 @@ void readState(struct MachineState *s) {
   }
   else if (s->lastButton2State != LOW && s->button2State != LOW) {
     s->button2Status = BUTTON_UNTOUCHED;
-  } 
+  }
+  if (s -> lastSensorState >= SENSOR_THRESHOLD && s -> sensorState < SENSOR_THRESHOLD) {
+    s -> sensorStatus = DROP_PASSING;
+  }
+  else {
+    s -> sensorStatus = DROP_NOT_PASSING;
+  }
 }
 
 void saveState(struct MachineState *currentMachineState) {
+  currentMachineState -> lastSensorState  = currentMachineState -> sensorState;
   currentMachineState -> lastButton1State = currentMachineState -> button1State;
   currentMachineState -> lastButton2State = currentMachineState -> button2State;
   currentMachineState -> lastButton3State = currentMachineState -> button3State;
@@ -172,14 +183,9 @@ void saveState(struct MachineState *currentMachineState) {
 }
 
 void readPins(struct MachineState *currentMachineState) {
-  if (analogRead(analogInPin) >= SENSOR_THRESHOLD) {
-    currentMachineState -> sensorReading = HIGH;
-  }
-  else {
-    currentMachineState -> sensorReading = LOW;
-  }
-  currentMachineState -> button1State = analogRead(currentMachineState -> Button1InPin);
-  currentMachineState -> button2State = analogRead(currentMachineState -> Button2InPin);
-  currentMachineState -> button3State = analogRead(currentMachineState -> Button3InPin);
-  currentMachineState -> button4State = digitalRead(currentMachineState -> Button4InPin);
+  currentMachineState -> sensorState = analogRead(analogInPin);
+  currentMachineState -> button1State = analogRead(Button1InPin);
+  currentMachineState -> button2State = analogRead(Button2InPin);
+  currentMachineState -> button3State = analogRead(Button3InPin);
+  currentMachineState -> button4State = digitalRead(Button4InPin);
 }
