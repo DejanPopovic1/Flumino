@@ -121,6 +121,14 @@ void loop()
 void readState(struct MachineState *s) {
   s->currentTime = micros();
   readPins(s);
+  buttonStatus(s);
+//  buttonStatus(/*button2*/);
+//  buttonStatus(/*button3*/);
+//  buttonStatus(/*button4*/);
+  sensorStatus(s);
+}
+
+void buttonStatus(struct MachineState *s) {
   if (s->lastButton2State == LOW && s->button2State != LOW) {
     s->button2Status = BUTTON_RELEASED;
     incrementFunctionPointer = NULL;
@@ -143,6 +151,9 @@ void readState(struct MachineState *s) {
   else if (s->lastButton2State != LOW && s->button2State != LOW) {
     s->button2Status = BUTTON_UNTOUCHED;
   }
+}
+
+void sensorStatus(struct MachineState *s) {
   if (s -> lastSensorState >= SENSOR_THRESHOLD && s -> sensorState < SENSOR_THRESHOLD) {
     s -> sensorStatus = DROP_PASSING;
   }
