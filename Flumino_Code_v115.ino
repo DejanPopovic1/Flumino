@@ -94,6 +94,7 @@ enum menu_page {
 
 struct MachineState currentMachineState;
 int (*incrementFunctionPointer)(int, int) = &smallIncrement;
+int (*decrementFunctionPointer)(int, int) = &smallDecrement;
 
 void setup()
 {
@@ -113,7 +114,7 @@ void loop()
   drugFlowRate(&currentMachineState);
   evaluateButton1(&currentMachineState);
   evaluateButton2(&currentMachineState, incrementFunctionPointer);
-  evaluateButton3(&currentMachineState);
+  evaluateButton3(&currentMachineState, decrementFunctionPointer);
   evaluateButton4(&currentMachineState);
   evaluateBuzzer(&currentMachineState);
   printToScreen(&currentMachineState);
@@ -123,32 +124,32 @@ void loop()
 void readState(struct MachineState *s) {
   s->currentTime = micros();
   readPins(s);
-  buttonStatus(&s->lastButton2State, &s->button2State, &s->button2Status, &incrementFunctionPointer, &s->button2HeldTime, &s->currentTime, &s->button2PressedTime);
-//  buttonStatus(/*button2*/);
+  buttonStatus(&s->lastButton2State, &s->button2State, &s->button2Status, &incrementFunctionPointer, &s->button2HeldTime, &s->currentTime, &s->button2PressedTime, 2);
+  buttonStatus(&s->lastButton3State, &s->button3State, &s->button3Status, &decrementFunctionPointer, &s->button3HeldTime, &s->currentTime, &s->button3PressedTime, 3);
 //  buttonStatus(/*button3*/);
 //  buttonStatus(/*button4*/);
   sensorStatus(s);
 }
 
-void buttonStatus(int *lastButtonState, int *buttonState, int *buttonStatus, int (**incrementFunctionPointer)(int, int), unsigned long *buttonHeldTime, unsigned long *currentTime, unsigned long *buttonPressedTime) {
+void buttonStatus(int *lastButtonState, int *buttonState, int *buttonStatus, int (**functionPointer)(int, int), unsigned long *buttonHeldTime, unsigned long *currentTime, unsigned long *buttonPressedTime, int button) {
   if (*lastButtonState == LOW && *buttonState != LOW) {
     *buttonStatus = BUTTON_RELEASED;
-    *incrementFunctionPointer = NULL;
+    *functionPointer = NULL;
   }
   else if (*lastButtonState == LOW && *buttonState == LOW) {
     *buttonHeldTime = *currentTime;
     *buttonStatus = BUTTON_HELD;
-    *incrementFunctionPointer = NULL;
+    *functionPointer = NULL;
     if (*buttonHeldTime - *buttonPressedTime >= BUTTON_HELD_TRIGGER_INCREMENT_TIME) {
       *buttonStatus = BUTTON_INCREMENTED;
       *buttonPressedTime = *currentTime;
-      *incrementFunctionPointer = &largeIncrement;
+      (button == 2) ? (*functionPointer = &largeIncrement) : (*functionPointer = &largeDecrement);
     }
   }
   else if (*lastButtonState != LOW && *buttonState == LOW) {
     *buttonStatus = BUTTON_PRESSED;
     *buttonPressedTime = *currentTime;
-    *incrementFunctionPointer = &smallIncrement;
+    (button == 2) ? (*functionPointer = &smallIncrement) : (*functionPointer = &smallDecrement);
   }
   else if (*lastButtonState != LOW && *buttonState != LOW) {
     *buttonStatus = BUTTON_UNTOUCHED;

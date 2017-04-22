@@ -83,13 +83,10 @@ void evaluateButton2(struct MachineState *s, int (*incrementFunctionPointer)(int
   }
 }
 
-void evaluateButton3(struct MachineState *s) {
-  if (s->lastButton3State != LOW && s->button3State == LOW) {
+void evaluateButton3(struct MachineState *s, int (*incrementFunctionPointer)(int, int)) {
+  if (s->button3Status == BUTTON_PRESSED || s->button3Status == BUTTON_INCREMENTED) {
     if (s->Menu == drops_per_millilitre_page) {
-      if (s->dropsPerMillilitreSelector == 0)
-        s->dropsPerMillilitreSelector = 2;
-      else
-        (s->dropsPerMillilitreSelector)--;
+      (s->dropsPerMillilitreSelector <= 0) ? s->dropsPerMillilitreSelector = 2 : (s->dropsPerMillilitreSelector)--;
       switch (s->dropsPerMillilitreSelector) {
         case 0:
           s->dropsPerMillilitre = TEN_DROPS_PER_MILLILITRE;
@@ -103,51 +100,21 @@ void evaluateButton3(struct MachineState *s) {
       }
     }
     else if (s->Menu == input_drug_mass_UOM_page)
-      if (s->inputDrugMassUOMSelector == 0)
-        s->inputDrugMassUOMSelector = 1;
-      else
-        (s->inputDrugMassUOMSelector)--;
-
+      s->inputDrugMassUOMSelector <= 0 ? s->inputDrugMassUOMSelector = 1 : s->inputDrugMassUOMSelector = (*incrementFunctionPointer)(s->inputDrugMassUOMSelector, input_drug_mass_UOM_page);
     else if (s->Menu == drug_mass_page && s->inputDrugMassUOMSelector == 0)
-      if (s->drugMassUgSelector == DRUG_UG_MASS_DEVIATION_LOWER_BOUND)
-        s->drugMassUgSelector = DRUG_UG_MASS_DEVIATION_UPPER_BOUND;
-      else
-        (s->drugMassUgSelector)--;
+      s->drugMassUgSelector <= DRUG_UG_MASS_DEVIATION_LOWER_BOUND ? s->drugMassUgSelector = DRUG_UG_MASS_DEVIATION_UPPER_BOUND : s->drugMassUgSelector = (*incrementFunctionPointer)(s->drugMassUgSelector, drug_mass_page);
     else if (s->Menu == drug_mass_page && s->inputDrugMassUOMSelector == 1)
-      if (s->drugMassMgSelector == DRUG_MG_MASS_DEVIATION_LOWER_BOUND)
-        s->drugMassMgSelector = DRUG_MG_MASS_DEVIATION_UPPER_BOUND;
-      else
-        (s->drugMassMgSelector)--;
-
+      s->drugMassMgSelector <= DRUG_MG_MASS_DEVIATION_LOWER_BOUND ? s->drugMassMgSelector = DRUG_MG_MASS_DEVIATION_UPPER_BOUND : s->drugMassMgSelector = (*incrementFunctionPointer)(s->drugMassMgSelector, drug_mass_page);
     else if (s->Menu == patient_mass_page)
-      if (s->patientMassSelector == PATIENT_MASS_LOWER_BOUND)
-        s->patientMassSelector = PATIENT_MASS_UPPER_BOUND;
-      else
-        (s->patientMassSelector)--;
-
+      s->patientMassSelector <= PATIENT_MASS_LOWER_BOUND ? s->patientMassSelector = PATIENT_MASS_UPPER_BOUND : s->patientMassSelector = (*incrementFunctionPointer)(s->patientMassSelector, patient_mass_page);
     else if (s->Menu == volume_dilutent_page)
-      if (s->volumeDilutantSelector == VOLUME_DILUTANT_LOWER_BOUND)
-        s->volumeDilutantSelector = VOLUME_DILUTANT_UPPER_BOUND;
-      else
-        (s->volumeDilutantSelector)--;
-
+      s->volumeDilutantSelector <= VOLUME_DILUTANT_LOWER_BOUND ? s->volumeDilutantSelector = VOLUME_DILUTANT_UPPER_BOUND : s->volumeDilutantSelector = (*incrementFunctionPointer)(s->volumeDilutantSelector, volume_dilutent_page);
     else if (s->Menu == allowable_flow_rate_deviation_page)
-      if (s->allowableFlowRateSelector == 1)
-        s->allowableFlowRateSelector = 100;
-      else
-        (s->allowableFlowRateSelector)--;
-
+      s->allowableFlowRateSelector <= ALARM_DEVIATION_LOWER_BOUND ? s->allowableFlowRateSelector = ALARM_DEVIATION_UPPER_BOUND : s->allowableFlowRateSelector = (*incrementFunctionPointer)(s->allowableFlowRateSelector, allowable_flow_rate_deviation_page);
     else if (s->Menu == input_dosage_y_n_page)
-      if (s->show_dose == true)
-        s->show_dose = false;
-      else
-        s->show_dose = true;
-
+      s->show_dose = !(s->show_dose);
     else if (s->Menu == display_dosage_UOM_page)
-      if (s->dose_shown == 0)
-        s->dose_shown = 2;
-      else
-        (s->dose_shown)--;
+      s->dose_shown <= 0 ? s->dose_shown = 2 : s->dose_shown = (*incrementFunctionPointer)(s->dose_shown, display_dosage_UOM_page);
   }
 }
 
@@ -170,26 +137,50 @@ void evaluateBuzzer(struct MachineState *s) {
   }
 }
 
-int smallIncrement(int initialValue, int dummyVariable) {
-  return ++initialValue;
+int smallIncrement(int value, int dummyVariable) {
+  return ++value;
 }
 
-int largeIncrement(int initialValue, int valueToIncrement) {
+int smallDecrement(int value, int dummyVariable) {
+  return --value;
+}
+
+int largeIncrement(int value, int valueToIncrement) {
   switch(valueToIncrement) {
   case 1:
-    initialValue += BUTTON_HELD_INCREMENT_ALARM_DEVIATION;
+    value += BUTTON_HELD_INCREMENT_ALARM_DEVIATION;
     break;
   case 5:
-    initialValue += BUTTON_HELD_INCREMENT_DRUG_MASS_UG;
+    value += BUTTON_HELD_INCREMENT_DRUG_MASS_UG;
     break;
   case 6:
-    initialValue += BUTTON_HELD_INCREMENT_PATIENT_MASS;
+    value += BUTTON_HELD_INCREMENT_PATIENT_MASS;
     break;
   case 7:
-    initialValue += BUTTON_HELD_INCREMENT_VOLUME_DILUTANT;
+    value += BUTTON_HELD_INCREMENT_VOLUME_DILUTANT;
     break;
   default:
-    initialValue++;  
+    value++;  
   }
-  return initialValue;
+  return value;
+}
+
+int largeDecrement(int value, int valueToDecrement) {
+  switch(valueToDecrement) {
+  case 1:
+    value -= BUTTON_HELD_INCREMENT_ALARM_DEVIATION;
+    break;
+  case 5:
+    value -= BUTTON_HELD_INCREMENT_DRUG_MASS_UG;
+    break;
+  case 6:
+    value -= BUTTON_HELD_INCREMENT_PATIENT_MASS;
+    break;
+  case 7:
+    value -= BUTTON_HELD_INCREMENT_VOLUME_DILUTANT;
+    break;
+  default:
+    value--;  
+  }
+  return value;
 }
