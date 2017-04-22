@@ -51,10 +51,7 @@ void evaluateButton1(struct MachineState *s) {
 void evaluateButton2(struct MachineState *s, int (*incrementFunctionPointer)(int, int)) {
   if (s->button2Status == BUTTON_PRESSED || s->button2Status == BUTTON_INCREMENTED) {
     if (s->Menu == drops_per_millilitre_page) {
-      if (s->dropsPerMillilitreSelector >= 2)
-        s->dropsPerMillilitreSelector = 0;
-      else
-        (s->dropsPerMillilitreSelector)++;
+      (s->dropsPerMillilitreSelector >= 2) ? s->dropsPerMillilitreSelector = 0 : (s->dropsPerMillilitreSelector)++;
       switch (s->dropsPerMillilitreSelector) {
         case 0:
           s->dropsPerMillilitre = TEN_DROPS_PER_MILLILITRE;
@@ -68,54 +65,21 @@ void evaluateButton2(struct MachineState *s, int (*incrementFunctionPointer)(int
       }
     }
     else if (s->Menu == input_drug_mass_UOM_page)
-      if (s->inputDrugMassUOMSelector >= 1)
-        s->inputDrugMassUOMSelector = 0;
-      else
-        (s->inputDrugMassUOMSelector)++;
-
+      (s->inputDrugMassUOMSelector >= 1) ? s->inputDrugMassUOMSelector = 0 : s->inputDrugMassUOMSelector = (*incrementFunctionPointer)(s->inputDrugMassUOMSelector, input_drug_mass_UOM_page);
     else if (s->Menu == drug_mass_page && s->inputDrugMassUOMSelector == 0)
-      if (s->drugMassUgSelector >= DRUG_UG_MASS_DEVIATION_UPPER_BOUND)
-        s->drugMassUgSelector = DRUG_UG_MASS_DEVIATION_LOWER_BOUND;
-
-      else
-        (s->drugMassUgSelector)++;
-
+      (s->drugMassUgSelector >= DRUG_UG_MASS_DEVIATION_UPPER_BOUND) ? s->drugMassUgSelector = DRUG_UG_MASS_DEVIATION_LOWER_BOUND : s->drugMassUgSelector = (*incrementFunctionPointer)(s->drugMassUgSelector, drug_mass_page);
     else if (s->Menu == drug_mass_page && s->inputDrugMassUOMSelector == 1)
-      if (s->drugMassMgSelector >= DRUG_MG_MASS_DEVIATION_UPPER_BOUND)
-        s->drugMassMgSelector = DRUG_MG_MASS_DEVIATION_LOWER_BOUND;
-      else
-        (s->drugMassMgSelector)++;
-
+      (s->drugMassMgSelector >= DRUG_MG_MASS_DEVIATION_UPPER_BOUND) ? s->drugMassMgSelector = DRUG_MG_MASS_DEVIATION_LOWER_BOUND : s->drugMassMgSelector = (*incrementFunctionPointer)(s->drugMassMgSelector, drug_mass_page);
     else if (s->Menu == patient_mass_page)
-      if (s->patientMassSelector >= PATIENT_MASS_UPPER_BOUND)
-        s->patientMassSelector = PATIENT_MASS_LOWER_BOUND;
-      else
-        (s->patientMassSelector)++;
-
+      (s->patientMassSelector >= PATIENT_MASS_UPPER_BOUND) ? s->patientMassSelector = PATIENT_MASS_LOWER_BOUND : s->patientMassSelector = (*incrementFunctionPointer)(s->patientMassSelector, patient_mass_page);
     else if (s->Menu == volume_dilutent_page)
-      if (s->volumeDilutantSelector >= VOLUME_DILUTANT_UPPER_BOUND)
-        s->volumeDilutantSelector = VOLUME_DILUTANT_LOWER_BOUND;
-      else
-        s->volumeDilutantSelector = (*incrementFunctionPointer)(s->volumeDilutantSelector, 7);
-
+      (s->volumeDilutantSelector >= VOLUME_DILUTANT_UPPER_BOUND) ? s->volumeDilutantSelector = VOLUME_DILUTANT_LOWER_BOUND : s->volumeDilutantSelector = (*incrementFunctionPointer)(s->volumeDilutantSelector, volume_dilutent_page);
     else if (s->Menu == allowable_flow_rate_deviation_page)
-      if (s->allowableFlowRateSelector >= ALARM_DEVIATION_UPPER_BOUND)
-        s->allowableFlowRateSelector = ALARM_DEVIATION_LOWER_BOUND;
-      else
-        (s->allowableFlowRateSelector)++;
-
+      (s->allowableFlowRateSelector >= ALARM_DEVIATION_UPPER_BOUND) ? s->allowableFlowRateSelector = ALARM_DEVIATION_LOWER_BOUND : s->allowableFlowRateSelector = (*incrementFunctionPointer)(s->allowableFlowRateSelector, allowable_flow_rate_deviation_page);
     else if (s->Menu == input_dosage_y_n_page)
-      if (s->show_dose == true)
-        s->show_dose = false;
-      else
-        s->show_dose = true;
-
+      (s->show_dose == true) ? s->show_dose = false : s->show_dose = true;
     else if (s->Menu == display_dosage_UOM_page)
-      if (s->dose_shown >= 2)
-        s->dose_shown = 0;
-      else
-        (s->dose_shown)++;
-    delay(1);
+      (s->dose_shown >= 2) ? s->dose_shown = 0 : s->dose_shown = (*incrementFunctionPointer)(s->dose_shown, display_dosage_UOM_page);
   }
 }
 
@@ -184,7 +148,6 @@ void evaluateButton3(struct MachineState *s) {
         s->dose_shown = 2;
       else
         (s->dose_shown)--;
-    delay(1);
   }
 }
 
