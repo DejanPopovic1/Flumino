@@ -21,7 +21,7 @@ double flowRate(struct MachineState *s) {
     dropsPerHour = ((double)MICROSECONDS_PER_MILLISECOND * MILLISECONDS_PER_SECOND * SECONDS_PER_MINUTE * MINUTE_PER_HOUR) / s->period;
     instantaneousFlowRate = dropsPerHour / s->dropsPerMillilitre;
     s->previousTime = s->currentTime;
-    return averageFlowRate(instantaneousFlowRate, s->newFlowRate);
+    return averageFlowRate(instantaneousFlowRate, s->flowRate);
   }
 }
 

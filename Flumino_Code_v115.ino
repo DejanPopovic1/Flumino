@@ -11,11 +11,6 @@
 
 #define BUTTON_HELD_TRIGGER_INCREMENT_TIME 500000
 #define BUTTON_HELD_INCREMENT_TIME 500000
-#define BUTTON_HELD_INCREMENT_TIME_ALARM_DEVIATION 1
-#define BUTTON_HELD_INCREMENT_DRUG_MASS_UG 10
-#define BUTTON_HELD_INCREMENT_DRUG_MASS_MG 10
-#define BUTTON_HELD_INCREMENT_PATIENT_MASS 5
-#define BUTTON_HELD_INCREMENT_VOLUME_DILUTANT 50
 
 const int analogInPin           = A1;
 const int BuzzerPin             = 3;
@@ -25,7 +20,7 @@ const int Button3InPin          = A3;
 const int Button4InPin          = 2;
 const int IROutPin              = 12;
 
-Adafruit_SharpMem display(SCK, MOSI, SS);  //For the SPI BUS
+Adafruit_SharpMem display(SCK, MOSI, SS);
 
 enum button_state {
   BUTTON_PRESSED,
@@ -41,9 +36,8 @@ enum sensor_state {
 };
 
 struct MachineState {
-  int Menu;
-
-  double DisplayedFlowRate;
+  int Menu                        = 0;
+  double DisplayedFlowRate        = 180;
   double DrugFlowRate             = 0;
   unsigned long period            = 0;
   int dropsPerMillilitre          = 20;
@@ -53,32 +47,23 @@ struct MachineState {
   float upper_sound_thresh        = 0;
   float lower_drugsound_thresh    = 0;
   float upper_drugsound_thresh    = 0;
-
   int sensorStatus                = 0;
   int lastSensorState             = 0;
   int sensorState                 = 0;
-  
-  //------Button-1-Code-----------------
   int button1PushCounter          = 8;
   int button1State                = 0;
   int lastButton1State            = 0;
-  int button1Status = BUTTON_UNTOUCHED;
-  //------Button-2-Code-----------------
-
+  int button1Status               = BUTTON_UNTOUCHED;
   int button2State                = 0;
   int lastButton2State            = 0;
-  int button2Status = BUTTON_UNTOUCHED;
+  int button2Status               = BUTTON_UNTOUCHED;
   unsigned long button2HeldTime   = 0;
-  //------Button-3-Code-----------------
-
   int button3State                = 0;
   int lastButton3State            = 0;
-  int button3Status = BUTTON_UNTOUCHED;
-  //------Button-4-Code-----------------
+  int button3Status               = BUTTON_UNTOUCHED;
   int button4State                = 0;
   int lastButton4State            = 1;
-  int button4Status = BUTTON_UNTOUCHED;
-  //--------Menu-Variable-Counters-------//
+  int button4Status               = BUTTON_UNTOUCHED;
   int dropsPerMillilitreSelector  = 1;
   int inputDrugMassUOMSelector    = 0;
   int drugMassUgSelector          = 100;
@@ -86,12 +71,11 @@ struct MachineState {
   int patientMassSelector         = 65;
   int volumeDilutantSelector      = 1000;
   int allowableFlowRateSelector   = 12;
-
-  bool BuzzerState = false;
-  double newFlowRate = 180;
-  unsigned long previousTime = 0;
-  unsigned long button2PressedTime = 0;
-  unsigned long currentTime;
+  bool BuzzerState                = false;
+  double flowRate                 = 180;
+  unsigned long previousTime      = 0;
+  unsigned long button2PressedTime= 0;
+  unsigned long currentTime       = 0;
 };
 
 enum menu_page {
@@ -106,8 +90,6 @@ enum menu_page {
   flow_rate_page
 };
 
-void readState(int *const, int *const, int *const, int *const, int *const, const int, const int, const int, const int, const int);
-bool isDropPassing = false;
 struct MachineState currentMachineState;
 int (*incrementFunctionPointer)(int, int) = &smallIncrement;
 
@@ -116,10 +98,10 @@ void setup()
   display.begin();
   Serial.begin(9600);
   digitalWrite(12, HIGH);
-  pinMode(13, OUTPUT); //LED
-  pinMode(3, OUTPUT);   //Buzzer
-  pinMode(2, INPUT);   //Button 4
-  pinMode(IROutPin, OUTPUT); //Infrared LED
+  pinMode(13, OUTPUT);
+  pinMode(3, OUTPUT);
+  pinMode(2, INPUT);
+  pinMode(IROutPin, OUTPUT);
 }
 
 void loop()

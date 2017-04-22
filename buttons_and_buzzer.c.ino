@@ -12,9 +12,7 @@
 #define VOLUME_DILUTANT_LOWER_BOUND         1
 #define VOLUME_DILUTANT_UPPER_BOUND         1000
 
-#define BUTTON_HELD_TRIGGER_INCREMENT_TIME 500000
-#define BUTTON_HELD_INCREMENT_TIME 500000
-#define BUTTON_HELD_INCREMENT_TIME_ALARM_DEVIATION 1
+#define BUTTON_HELD_INCREMENT_ALARM_DEVIATION 1
 #define BUTTON_HELD_INCREMENT_DRUG_MASS_UG 10
 #define BUTTON_HELD_INCREMENT_DRUG_MASS_MG 10
 #define BUTTON_HELD_INCREMENT_PATIENT_MASS 5
@@ -22,37 +20,31 @@
 
 void evaluateFlowRate(struct MachineState *s) {
   if (s->sensorStatus == DROP_PASSING) {
-    s->newFlowRate = flowRate(s);
+    s->flowRate = flowRate(s);
   }
   if (s->currentTime >= s->previousTime + s->period) {
-    s->newFlowRate =  decayedFlowRate(s->previousTime, s->currentTime, s->dropsPerMillilitre, s->period);
+    s->flowRate =  decayedFlowRate(s->previousTime, s->currentTime, s->dropsPerMillilitre, s->period);
   }
   if (s->currentTime % DISPLAY_PERIOD <= MAXIMUM_CYCLE_TIME) {
-    s->DisplayedFlowRate = s->newFlowRate;
+    s->DisplayedFlowRate = s->flowRate;
   }
 }
 
 void evaluateButton1(struct MachineState *s) {
   if (s->lastButton1State != LOW && s->button1State == LOW) {
-    if (s->Menu == 8)
-    {
+    if (s->Menu == 8) {
       s->Menu = 0;
     }
-    else if (s->Menu == 2 && s->show_dose == false)
-    {
+    else if (s->Menu == 2 && s->show_dose == false) {
       s->Menu = 8;
     }
-    else
-    {
+    else {
       (s->Menu)++;
     }
   }
 }
 
 void evaluateButton2(struct MachineState *s, int (*incrementFunctionPointer)(int, int)) {
-  static unsigned long button2HeldTime = 0;
-  static bool button2HeldFlag = false;
-
   if (s->button2Status == BUTTON_PRESSED || s->button2Status == BUTTON_INCREMENTED) {
     s->button2PressedTime = micros();
     if (s->Menu == drops_per_millilitre_page) {
@@ -196,8 +188,8 @@ void evaluateButton3(struct MachineState *s) {
 void evaluateButton4(struct MachineState *s) {
   if (s->lastButton4State != LOW && s->button4State == LOW && s->Menu == flow_rate_page) {
     s->BuzzerState = !(s->BuzzerState);
-    s->lower_sound_thresh = s->newFlowRate * (1 - (float)s->allowableFlowRateSelector / 100);
-    s->upper_sound_thresh = s->newFlowRate * (1 + (float)s->allowableFlowRateSelector / 100);
+    s->lower_sound_thresh = s->flowRate * (1 - (float)s->allowableFlowRateSelector / 100);
+    s->upper_sound_thresh = s->flowRate * (1 + (float)s->allowableFlowRateSelector / 100);
     s->lower_drugsound_thresh = s->DrugFlowRate * (1 - (float)s->allowableFlowRateSelector / 100);
     s->upper_drugsound_thresh = s->DrugFlowRate * (1 + (float)s->allowableFlowRateSelector / 100);
   }
@@ -205,10 +197,10 @@ void evaluateButton4(struct MachineState *s) {
 
 void evaluateBuzzer(struct MachineState *s) {
   if (s->BuzzerState && (s->DisplayedFlowRate < s->lower_sound_thresh  || s->DisplayedFlowRate > s->upper_sound_thresh)) {
-    digitalWrite(BuzzerPin, HIGH );
+    digitalWrite(BuzzerPin, HIGH);
   }
   else {
-    digitalWrite(BuzzerPin, LOW );
+    digitalWrite(BuzzerPin, LOW);
   }
 }
 
@@ -219,7 +211,7 @@ int smallIncrement(int initialValue, int dummyVariable) {
 int largeIncrement(int initialValue, int valueToIncrement) {
   switch(valueToIncrement) {
   case 1:
-    initialValue += BUTTON_HELD_INCREMENT_TIME_ALARM_DEVIATION;
+    initialValue += BUTTON_HELD_INCREMENT_ALARM_DEVIATION;
     break;
   case 5:
     initialValue += BUTTON_HELD_INCREMENT_DRUG_MASS_UG;
@@ -232,8 +224,4 @@ int largeIncrement(int initialValue, int valueToIncrement) {
     break;
   }
   return initialValue;
-}
-
-int TESTFUNCTIONPLEASEREMOVEWHENDONE(int initialValue, int dummyVariable) {
-  return initialValue++;
 }
