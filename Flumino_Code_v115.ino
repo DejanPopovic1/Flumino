@@ -106,6 +106,8 @@ bool isDropPassing = false;
 
 struct MachineState currentMachineState;
 
+int (*incrementFunctionPointer)(int, int) = &smallIncrement;
+
 void setup()
 {
   display.begin();
@@ -126,11 +128,10 @@ void loop()
   evaluateFlowRate(isDropPassing, &currentMachineState);
   drugFlowRate(&currentMachineState);
   evaluateButton1(&currentMachineState);
-  evaluateButton2(&currentMachineState);
+  evaluateButton2(&currentMachineState, incrementFunctionPointer);
   evaluateButton3(&currentMachineState);
   evaluateButton4(&currentMachineState);
   evaluateBuzzer(&currentMachineState);
-  display.clearDisplay();
   currentMachineState.Menu = currentMachineState.button1PushCounter;
   printToScreen(&currentMachineState);
   currentMachineState.previoiusSensorReading = currentMachineState.sensorReading;
@@ -141,26 +142,26 @@ void readState(struct MachineState *s) {
   readPins(s);
   if (s->lastButton2State == LOW && s->button2State != LOW) {
     s->button2Status = BUTTON_RELEASED;
+    incrementFunctionPointer = NULL;
   }
   else if (s->lastButton2State == LOW && s->button2State == LOW) {
     s->button2HeldTime = micros();
     s->button2Status = BUTTON_HELD;
-    //incrementFunctionPointer = smallIncrement;
+    incrementFunctionPointer = NULL;
     if (s->button2HeldTime - s->button2PressedTime >= BUTTON_HELD_TRIGGER_INCREMENT_TIME) {
       s->button2Status = BUTTON_INCREMENTED;
       s->button2PressedTime = micros();
-      //incrementFunctionPointer = largeIncrement; //Point function pointer to point to large increment function
+      incrementFunctionPointer = &largeIncrement;
     }
   }
   else if (s->lastButton2State != LOW && s->button2State == LOW) {
     s->button2Status = BUTTON_PRESSED;
     s->button2PressedTime = micros();
-    //incrementFunctionPointer = smallIncrement; //Point function pointer to point to small increment function
+    incrementFunctionPointer = &smallIncrement;
   }
   else if (s->lastButton2State != LOW && s->button2State != LOW) {
     s->button2Status = BUTTON_UNTOUCHED;
   } 
-  Serial.println(s->button2Status);
 }
 
 void saveState(struct MachineState *currentMachineState) {

@@ -1,6 +1,6 @@
 
 void printToScreen(struct MachineState *currentMachineState) {
-
+  display.clearDisplay();
   switch (currentMachineState -> Menu) {
     case drops_per_millilitre_page:
       display.setTextSize(1);
