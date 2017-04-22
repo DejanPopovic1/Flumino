@@ -12,6 +12,10 @@
 #define VOLUME_DILUTANT_LOWER_BOUND         1
 #define VOLUME_DILUTANT_UPPER_BOUND         1000
 
+#define TEN_DROPS_PER_MILLILITRE            10
+#define TWENTY_DROPS_PER_MILLILITRE         20
+#define SIXTY_DROPS_PER_MILLILITRE         30
+
 #define BUTTON_HELD_INCREMENT_ALARM_DEVIATION 1
 #define BUTTON_HELD_INCREMENT_DRUG_MASS_UG 10
 #define BUTTON_HELD_INCREMENT_DRUG_MASS_MG 10
@@ -32,11 +36,11 @@ void evaluateFlowRate(struct MachineState *s) {
 
 void evaluateButton1(struct MachineState *s) {
   if (s->lastButton1State != LOW && s->button1State == LOW) {
-    if (s->Menu == 8) {
-      s->Menu = 0;
+    if (s->Menu == flow_rate_page) {
+      s->Menu = drops_per_millilitre_page;
     }
-    else if (s->Menu == 2 && s->show_dose == false) {
-      s->Menu = 8;
+    else if (s->Menu == input_dosage_y_n_page && s->show_dose == false) {
+      s->Menu = flow_rate_page;
     }
     else {
       (s->Menu)++;
@@ -46,7 +50,6 @@ void evaluateButton1(struct MachineState *s) {
 
 void evaluateButton2(struct MachineState *s, int (*incrementFunctionPointer)(int, int)) {
   if (s->button2Status == BUTTON_PRESSED || s->button2Status == BUTTON_INCREMENTED) {
-    s->button2PressedTime = micros();
     if (s->Menu == drops_per_millilitre_page) {
       if (s->dropsPerMillilitreSelector >= 2)
         s->dropsPerMillilitreSelector = 0;
@@ -54,13 +57,13 @@ void evaluateButton2(struct MachineState *s, int (*incrementFunctionPointer)(int
         (s->dropsPerMillilitreSelector)++;
       switch (s->dropsPerMillilitreSelector) {
         case 0:
-          s->dropsPerMillilitre = 10;
+          s->dropsPerMillilitre = TEN_DROPS_PER_MILLILITRE;
           break;
         case 1:
-          s->dropsPerMillilitre = 20;
+          s->dropsPerMillilitre = TWENTY_DROPS_PER_MILLILITRE;
           break;
         case 2:
-          s->dropsPerMillilitre = 60;
+          s->dropsPerMillilitre = SIXTY_DROPS_PER_MILLILITRE;
           break;
       }
     }
@@ -93,7 +96,7 @@ void evaluateButton2(struct MachineState *s, int (*incrementFunctionPointer)(int
       if (s->volumeDilutantSelector >= VOLUME_DILUTANT_UPPER_BOUND)
         s->volumeDilutantSelector = VOLUME_DILUTANT_LOWER_BOUND;
       else
-        s->volumeDilutantSelector = (*incrementFunctionPointer)(s->volumeDilutantSelector, 7);//////////////////CONTINUE HERE//////////////////////////
+        s->volumeDilutantSelector = (*incrementFunctionPointer)(s->volumeDilutantSelector, 7);
 
     else if (s->Menu == allowable_flow_rate_deviation_page)
       if (s->allowableFlowRateSelector >= ALARM_DEVIATION_UPPER_BOUND)
@@ -125,13 +128,13 @@ void evaluateButton3(struct MachineState *s) {
         (s->dropsPerMillilitreSelector)--;
       switch (s->dropsPerMillilitreSelector) {
         case 0:
-          s->dropsPerMillilitre = 10;
+          s->dropsPerMillilitre = TEN_DROPS_PER_MILLILITRE;
           break;
         case 1:
-          s->dropsPerMillilitre = 20;
+          s->dropsPerMillilitre = TWENTY_DROPS_PER_MILLILITRE;
           break;
         case 2:
-          s->dropsPerMillilitre = 60;
+          s->dropsPerMillilitre = SIXTY_DROPS_PER_MILLILITRE;
           break;
       }
     }
@@ -222,6 +225,8 @@ int largeIncrement(int initialValue, int valueToIncrement) {
   case 7:
     initialValue += BUTTON_HELD_INCREMENT_VOLUME_DILUTANT;
     break;
+  default:
+    initialValue++;  
   }
   return initialValue;
 }

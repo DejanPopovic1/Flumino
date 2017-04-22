@@ -126,18 +126,18 @@ void readState(struct MachineState *s) {
     incrementFunctionPointer = NULL;
   }
   else if (s->lastButton2State == LOW && s->button2State == LOW) {
-    s->button2HeldTime = micros();
+    s->button2HeldTime = s->currentTime;
     s->button2Status = BUTTON_HELD;
     incrementFunctionPointer = NULL;
     if (s->button2HeldTime - s->button2PressedTime >= BUTTON_HELD_TRIGGER_INCREMENT_TIME) {
       s->button2Status = BUTTON_INCREMENTED;
-      s->button2PressedTime = micros();
+      s->button2PressedTime = s->currentTime;
       incrementFunctionPointer = &largeIncrement;
     }
   }
   else if (s->lastButton2State != LOW && s->button2State == LOW) {
     s->button2Status = BUTTON_PRESSED;
-    s->button2PressedTime = micros();
+    s->button2PressedTime = s->currentTime;
     incrementFunctionPointer = &smallIncrement;
   }
   else if (s->lastButton2State != LOW && s->button2State != LOW) {
