@@ -57,8 +57,6 @@ struct MachineState {
   int sensorStatus                = 0;
   int lastSensorState             = 0;
   int sensorState                 = 0;
-  int previoiusSensorReading      = 0;     // previous state of the button
-  int sensorReading               = 0;
   
   //------Button-1-Code-----------------
   int button1PushCounter          = 8;
@@ -66,18 +64,17 @@ struct MachineState {
   int lastButton1State            = 0;
   int button1Status = BUTTON_UNTOUCHED;
   //------Button-2-Code-----------------
-  int button2PushCounter          = 1;
+
   int button2State                = 0;
   int lastButton2State            = 0;
   int button2Status = BUTTON_UNTOUCHED;
   unsigned long button2HeldTime   = 0;
   //------Button-3-Code-----------------
-  int button3PushCounter          = 1;
+
   int button3State                = 0;
   int lastButton3State            = 0;
   int button3Status = BUTTON_UNTOUCHED;
   //------Button-4-Code-----------------
-  int button4PushCounter          = false;
   int button4State                = 0;
   int lastButton4State            = 1;
   int button4Status = BUTTON_UNTOUCHED;
@@ -127,7 +124,6 @@ void setup()
 
 void loop()
 {
-  currentMachineState.currentTime = micros();
   readState(&currentMachineState);
   evaluateFlowRate(&currentMachineState);
   drugFlowRate(&currentMachineState);
@@ -136,13 +132,12 @@ void loop()
   evaluateButton3(&currentMachineState);
   evaluateButton4(&currentMachineState);
   evaluateBuzzer(&currentMachineState);
-  currentMachineState.Menu = currentMachineState.button1PushCounter;
   printToScreen(&currentMachineState);
-  currentMachineState.previoiusSensorReading = currentMachineState.sensorReading;
   saveState(&currentMachineState);
 }
 
 void readState(struct MachineState *s) {
+  s->currentTime = micros();
   readPins(s);
   if (s->lastButton2State == LOW && s->button2State != LOW) {
     s->button2Status = BUTTON_RELEASED;
