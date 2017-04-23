@@ -157,8 +157,10 @@ void buttonStatus(int *lastButtonState, int *buttonState, int *buttonStatus, int
 }
 
 void sensorStatus(struct MachineState *s) {
+  static unsigned long i = 0;
   if (s -> lastSensorState >= SENSOR_THRESHOLD && s -> sensorState < SENSOR_THRESHOLD) {
     s -> sensorStatus = DROP_PASSING;
+    Serial.println(++i);
   }
   else {
     s -> sensorStatus = DROP_NOT_PASSING;

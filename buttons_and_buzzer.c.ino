@@ -1,5 +1,5 @@
 #define MAXIMUM_CYCLE_TIME                  20000
-#define DISPLAY_PERIOD                      2000000
+#define DISPLAY_PERIOD                      1000000
 
 #define ALARM_DEVIATION_LOWER_BOUND         1
 #define ALARM_DEVIATION_UPPER_BOUND         100
