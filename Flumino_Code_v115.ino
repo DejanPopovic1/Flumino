@@ -54,6 +54,8 @@ struct MachineState {
   int button1State                = 0;
   int lastButton1State            = 0;
   int button1Status               = BUTTON_UNTOUCHED;
+  unsigned long button1HeldTime   = 0;
+  unsigned long button1PressedTime= 0;
   int button2State                = 0;
   int lastButton2State            = 0;
   int button2Status               = BUTTON_UNTOUCHED;
@@ -67,6 +69,8 @@ struct MachineState {
   int button4State                = 0;
   int lastButton4State            = 1;
   int button4Status               = BUTTON_UNTOUCHED;
+  unsigned long button4HeldTime   = 0;
+  unsigned long button4PressedTime= 0;
   int dropsPerMillilitreSelector  = 1;
   int inputDrugMassUOMSelector    = 0;
   int drugMassUgSelector          = 100;
@@ -109,7 +113,7 @@ void setup()
 
 void loop()
 {
-  readState(&currentMachineState);
+  readStatus(&currentMachineState);
   evaluateFlowRate(&currentMachineState);
   drugFlowRate(&currentMachineState);
   evaluateButton1(&currentMachineState);
@@ -121,13 +125,13 @@ void loop()
   saveState(&currentMachineState);
 }
 
-void readState(struct MachineState *s) {
+void readStatus(struct MachineState *s) {
   s->currentTime = micros();
   readPins(s);
+  buttonStatus(&s->lastButton1State, &s->button1State, &s->button1Status, &incrementFunctionPointer, &s->button1HeldTime, &s->currentTime, &s->button1PressedTime, 1);
   buttonStatus(&s->lastButton2State, &s->button2State, &s->button2Status, &incrementFunctionPointer, &s->button2HeldTime, &s->currentTime, &s->button2PressedTime, 2);
   buttonStatus(&s->lastButton3State, &s->button3State, &s->button3Status, &decrementFunctionPointer, &s->button3HeldTime, &s->currentTime, &s->button3PressedTime, 3);
-//  buttonStatus(/*button3*/);
-//  buttonStatus(/*button4*/);
+  buttonStatus(&s->lastButton4State, &s->button4State, &s->button4Status, &incrementFunctionPointer, &s->button4HeldTime, &s->currentTime, &s->button4PressedTime, 4);
   sensorStatus(s);
 }
 
@@ -157,10 +161,8 @@ void buttonStatus(int *lastButtonState, int *buttonState, int *buttonStatus, int
 }
 
 void sensorStatus(struct MachineState *s) {
-  static unsigned long i = 0;
   if (s -> lastSensorState >= SENSOR_THRESHOLD && s -> sensorState < SENSOR_THRESHOLD) {
     s -> sensorStatus = DROP_PASSING;
-    Serial.println(++i);
   }
   else {
     s -> sensorStatus = DROP_NOT_PASSING;

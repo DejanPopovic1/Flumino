@@ -37,7 +37,7 @@ void evaluateFlowRate(struct MachineState *s) {
 }
 
 void evaluateButton1(struct MachineState *s) {
-  if (s->lastButton1State != LOW && s->button1State == LOW) {
+  if (s->button1Status == BUTTON_PRESSED) {
     if (s->Menu == flow_rate_page) {
       s->Menu = drops_per_millilitre_page;
     }
@@ -121,7 +121,7 @@ void evaluateButton3(struct MachineState *s, int (*incrementFunctionPointer)(int
 }
 
 void evaluateButton4(struct MachineState *s) {
-  if (s->lastButton4State != LOW && s->button4State == LOW && s->Menu == flow_rate_page) {
+  if (s->button4Status == BUTTON_PRESSED && s->Menu == flow_rate_page) {
     s->BuzzerState = !(s->BuzzerState);
     s->lower_sound_thresh = s->flowRate * (1 - (float)s->allowableFlowRateSelector / 100);
     s->upper_sound_thresh = s->flowRate * (1 + (float)s->allowableFlowRateSelector / 100);
