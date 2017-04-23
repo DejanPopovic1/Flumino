@@ -25,13 +25,15 @@
 void evaluateFlowRate(struct MachineState *s) {
   if (s->sensorStatus == DROP_PASSING) {
     s->flowRate = flowRate(s);
+    s->previousTime = s->currentTime;
   }
-  if (s->currentTime >= s->previousTime + s->period) {
-    s->flowRate =  decayedFlowRate(s->previousTime, s->currentTime, s->dropsPerMillilitre, s->period);
-  }
-  if (s->currentTime % DISPLAY_PERIOD <= MAXIMUM_CYCLE_TIME) {
-    s->DisplayedFlowRate = s->flowRate;
-  }
+  s->DisplayedFlowRate = s->flowRate;//ADDED TOGETHER WITH COMMENTED OUT SECTIONS
+//  if (s->currentTime >= s->previousTime + s->period) {
+//    s->flowRate =  decayedFlowRate(s->previousTime, s->currentTime, s->dropsPerMillilitre, s->period);
+//  }
+//  if (s->currentTime % DISPLAY_PERIOD <= MAXIMUM_CYCLE_TIME) {
+//    s->DisplayedFlowRate = s->flowRate;
+//  }
 }
 
 void evaluateButton1(struct MachineState *s) {
