@@ -1,6 +1,11 @@
-void printToScreen(struct MachineState *currentMachineState) {
+void printToScreen(struct MachineState *s) {
+  bool screenRefreshEvent = s->button1Status == BUTTON_PRESSED || s->button2Status == BUTTON_PRESSED || s->button2Status == BUTTON_INCREMENTED || s->button3Status == BUTTON_PRESSED || 
+                            s->button3Status == BUTTON_INCREMENTED || s->button4Status == BUTTON_PRESSED || s->sensorStatus == DROP_PASSING;
+  if(!screenRefreshEvent) {
+    return;
+  }
   display.clearDisplay();
-  switch (currentMachineState -> Menu) {
+  switch (s -> Menu) {
     case drops_per_millilitre_page:
       display.setTextSize(1);
       display.setTextColor(WHITE, BLACK);
@@ -8,7 +13,7 @@ void printToScreen(struct MachineState *currentMachineState) {
       display.println("    Drops/ml    ");
       display.println("");
       display.setTextColor(BLACK, WHITE);
-      if (currentMachineState -> dropsPerMillilitreSelector == 0) {
+      if (s -> dropsPerMillilitreSelector == 0) {
         display.setTextColor(WHITE, BLACK);
         display.println("1) 10 drops/ml");
         display.setTextColor(BLACK, WHITE);
@@ -17,7 +22,7 @@ void printToScreen(struct MachineState *currentMachineState) {
         display.println("1) 10 drops/ml");
       }
       display.println("");
-      if (currentMachineState -> dropsPerMillilitreSelector == 1) {
+      if (s -> dropsPerMillilitreSelector == 1) {
         display.setTextColor(WHITE, BLACK);
         display.println("2) 20 drops/ml");
         display.setTextColor(BLACK, WHITE);
@@ -26,7 +31,7 @@ void printToScreen(struct MachineState *currentMachineState) {
         display.println("2) 20 drops/ml");
       }
       display.println("");
-      if (currentMachineState -> dropsPerMillilitreSelector == 2) {
+      if (s -> dropsPerMillilitreSelector == 2) {
         display.setTextColor(WHITE, BLACK);
         display.println("3) 60 drops/ml");
         display.setTextColor(BLACK, WHITE);
@@ -46,7 +51,7 @@ void printToScreen(struct MachineState *currentMachineState) {
       display.print(" ");
       display.setTextColor(WHITE, BLACK); // 'inverted' text
       display.setTextSize(2);
-      display.print(currentMachineState -> allowableFlowRateSelector);
+      display.print(s -> allowableFlowRateSelector);
       break;
 
     case input_dosage_y_n_page:
@@ -56,7 +61,7 @@ void printToScreen(struct MachineState *currentMachineState) {
       display.println(" Input Dosage?  ");
       display.setTextColor(BLACK);
       display.print(" ");
-      if (currentMachineState -> show_dose == false) {
+      if (s -> show_dose == false) {
         display.print("Yes");
         display.print(" / ");
         display.setTextColor(WHITE, BLACK);
@@ -73,7 +78,7 @@ void printToScreen(struct MachineState *currentMachineState) {
         display.setTextColor(BLACK);
         display.println(" ");
       }
-      if (currentMachineState -> show_dose == true) {
+      if (s -> show_dose == true) {
         display.setTextColor(WHITE, BLACK);
         display.println(" Display Dosage Units of Measure");
         display.setTextColor(BLACK, WHITE);
@@ -95,7 +100,7 @@ void printToScreen(struct MachineState *currentMachineState) {
       display.println(" Input Dosage?  ");
       display.setTextColor(BLACK);
       display.print(" ");
-      if (currentMachineState -> show_dose == false) {
+      if (s -> show_dose == false) {
         display.print("Yes");
         display.print(" / ");
         display.setTextColor(WHITE, BLACK);
@@ -112,12 +117,12 @@ void printToScreen(struct MachineState *currentMachineState) {
         display.setTextColor(BLACK);
         display.println(" ");
       }
-      if (currentMachineState -> show_dose == true) {
+      if (s -> show_dose == true) {
         display.setTextColor(WHITE, BLACK);
         display.println(" Display Dosage Units of Measure");
         display.setTextColor(BLACK, WHITE);
         display.print(" ");
-        if (currentMachineState -> dose_shown == 0) {
+        if (s -> dose_shown == 0) {
           display.setTextColor(WHITE, BLACK);
           display.println("ng/kg/min");
           display.setTextColor(BLACK, WHITE);
@@ -128,7 +133,7 @@ void printToScreen(struct MachineState *currentMachineState) {
           display.print(" ");
           display.println("mg/kg/min");
         }
-        else if (currentMachineState -> dose_shown == 1) {
+        else if (s -> dose_shown == 1) {
           display.println("ng/kg/min");
           display.println(" ");
           display.print(" ");
@@ -139,7 +144,7 @@ void printToScreen(struct MachineState *currentMachineState) {
           display.print(" ");
           display.println("mg/kg/min");
         }
-        else if (currentMachineState -> dose_shown == 2) {
+        else if (s -> dose_shown == 2) {
           display.println("ng/kg/min");
           display.println(" ");
           display.print(" ");
@@ -159,7 +164,7 @@ void printToScreen(struct MachineState *currentMachineState) {
       display.setCursor(0, 0);
       display.println("Input Drug Mass Units of Measure");
       display.setTextColor(BLACK);
-      if (currentMachineState -> inputDrugMassUOMSelector == 0) {
+      if (s -> inputDrugMassUOMSelector == 0) {
         display.setTextColor(WHITE, BLACK);
         display.println("1) ug");
         display.setTextColor(BLACK);
@@ -167,7 +172,7 @@ void printToScreen(struct MachineState *currentMachineState) {
       else
         display.println("1) ug");
       display.println("");
-      if (currentMachineState -> inputDrugMassUOMSelector == 1) {
+      if (s -> inputDrugMassUOMSelector == 1) {
         display.setTextColor(WHITE, BLACK);
         display.println("2) mg");
         display.setTextColor(BLACK);
@@ -181,11 +186,11 @@ void printToScreen(struct MachineState *currentMachineState) {
       display.setTextColor(BLACK);
       display.print("   ");
       display.setTextSize(2);
-      if (currentMachineState -> inputDrugMassUOMSelector == 0) {
-        display.println(currentMachineState -> drugMassUgSelector);
+      if (s -> inputDrugMassUOMSelector == 0) {
+        display.println(s -> drugMassUgSelector);
       }
       else {
-        display.println(currentMachineState -> drugMassMgSelector);
+        display.println(s -> drugMassMgSelector);
       }
       break;
 
@@ -195,7 +200,7 @@ void printToScreen(struct MachineState *currentMachineState) {
       display.setCursor(0, 0);
       display.println("Input Drug Mass Units of Measure");
       display.setTextColor(BLACK);
-      if (currentMachineState -> inputDrugMassUOMSelector == 0) {
+      if (s -> inputDrugMassUOMSelector == 0) {
         display.setTextColor(WHITE, BLACK);
         display.println("1) ug");
         display.setTextColor(BLACK);
@@ -204,7 +209,7 @@ void printToScreen(struct MachineState *currentMachineState) {
         display.println("1) ug");
       }
       display.println("");
-      if (currentMachineState -> inputDrugMassUOMSelector == 1) {
+      if (s -> inputDrugMassUOMSelector == 1) {
         display.setTextColor(WHITE, BLACK);
         display.println("2) mg");
         display.setTextColor(BLACK);
@@ -219,11 +224,11 @@ void printToScreen(struct MachineState *currentMachineState) {
       display.print("   ");
       display.setTextSize(2);
       display.setTextColor(WHITE, BLACK);
-      if (currentMachineState -> inputDrugMassUOMSelector == 0) {
-        display.println(currentMachineState -> drugMassUgSelector);
+      if (s -> inputDrugMassUOMSelector == 0) {
+        display.println(s -> drugMassUgSelector);
       }
       else {
-        display.println(currentMachineState -> drugMassMgSelector);
+        display.println(s -> drugMassMgSelector);
       }
       display.setTextColor(BLACK);
       break;
@@ -237,7 +242,7 @@ void printToScreen(struct MachineState *currentMachineState) {
       display.setTextSize(2);
       display.print(" ");
       display.setTextColor(WHITE, BLACK);
-      display.println(currentMachineState -> patientMassSelector);
+      display.println(s -> patientMassSelector);
       display.setTextSize(1);
       display.println("");
       display.setTextColor(WHITE, BLACK);
@@ -245,7 +250,7 @@ void printToScreen(struct MachineState *currentMachineState) {
       display.setTextColor(BLACK);
       display.setTextSize(2);
       display.print(" ");
-      display.println(currentMachineState -> volumeDilutantSelector);
+      display.println(s -> volumeDilutantSelector);
       display.println("");
       break;
     case volume_dilutent_page:
@@ -257,7 +262,7 @@ void printToScreen(struct MachineState *currentMachineState) {
       display.println(" ");
       display.setTextSize(2);
       display.print(" ");
-      display.println(currentMachineState -> patientMassSelector);
+      display.println(s -> patientMassSelector);
       display.setTextSize(1);
       display.println("");
       display.setTextColor(WHITE, BLACK);
@@ -266,7 +271,7 @@ void printToScreen(struct MachineState *currentMachineState) {
       display.setTextSize(2);
       display.print(" ");
       display.setTextColor(WHITE, BLACK);
-      display.println(currentMachineState -> volumeDilutantSelector);
+      display.println(s -> volumeDilutantSelector);
       display.println("");
       break;
     case flow_rate_page:
@@ -276,40 +281,40 @@ void printToScreen(struct MachineState *currentMachineState) {
       display.println("Saline Drip Rate     (ml/hr)    ");
       display.setTextColor(BLACK);
       display.setTextSize(2);
-      display.println(currentMachineState -> DisplayedFlowRate);
+      display.println(s -> DisplayedFlowRate);
       display.setTextSize(1);
-      if (currentMachineState -> BuzzerState == 1) {
-        display.print(currentMachineState -> lower_sound_thresh);
+      if (s -> BuzzerState == 1) {
+        display.print(s -> lower_sound_thresh);
         display.print("-");
-        display.print(currentMachineState -> upper_sound_thresh);
+        display.print(s -> upper_sound_thresh);
       }
       display.println("");
       display.setTextColor(WHITE, BLACK);
-      if (currentMachineState -> show_dose == true) {
-        if (currentMachineState -> dose_shown == 0) {
+      if (s -> show_dose == true) {
+        if (s -> dose_shown == 0) {
           display.print(" Drug Drip Rate ");
           display.println("   (ng/kg/min)  ");
         }
-        else if (currentMachineState -> dose_shown == 1) {
+        else if (s -> dose_shown == 1) {
           display.print(" Drug Drip Rate ");
           display.println("   (ug/kg/min)  ");
         }
-        else if (currentMachineState -> dose_shown == 2) {
+        else if (s -> dose_shown == 2) {
           display.print(" Drug Drip Rate ");
           display.println("   (mg/kg/min)  ");
         }
         display.setTextSize(2);
         display.setTextColor(BLACK);
-        display.println(currentMachineState -> DrugFlowRate);
+        display.println(s -> DrugFlowRate);
         display.setTextSize(1);
-        if (currentMachineState -> BuzzerState == 1) {
-          display.print(currentMachineState -> lower_drugsound_thresh);
+        if (s -> BuzzerState == 1) {
+          display.print(s -> lower_drugsound_thresh);
           display.print("-");
-          display.print(currentMachineState -> upper_drugsound_thresh);
+          display.print(s -> upper_drugsound_thresh);
         }
       }
       break;
   }
     display.refresh();
-    delay(10);
+    //delay(10);
 }

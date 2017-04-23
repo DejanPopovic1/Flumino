@@ -4,25 +4,19 @@
 #define MINUTE_PER_HOUR 60
 
 const float alpha = 0.25;
-const int maximumDebouncePeriod = 20;
 
 static double averageFlowRate(double instantaneousFlowRate, double previouslyAveragedFlowRate) {
   return (double)alpha * instantaneousFlowRate + (1 - alpha) * previouslyAveragedFlowRate;
 }
 
 double flowRate(struct MachineState *s) {
-  s->period = s->currentTime - s->previousTime;
+  s->previousTime = s->currentTime;
   double dropsPerHour;
   double instantaneousFlowRate;
-  if (s->period < maximumDebouncePeriod) {
-    ;
-  }
-  else {
-    dropsPerHour = ((double)MICROSECONDS_PER_MILLISECOND * MILLISECONDS_PER_SECOND * SECONDS_PER_MINUTE * MINUTE_PER_HOUR) / s->period;
-    instantaneousFlowRate = dropsPerHour / s->dropsPerMillilitre;
-    return instantaneousFlowRate;
-    //return averageFlowRate(instantaneousFlowRate, s->flowRate);
-  }
+  dropsPerHour = ((double)MICROSECONDS_PER_MILLISECOND * MILLISECONDS_PER_SECOND * SECONDS_PER_MINUTE * MINUTE_PER_HOUR) / s->period;
+  instantaneousFlowRate = dropsPerHour / s->dropsPerMillilitre;
+  return instantaneousFlowRate;
+  //return averageFlowRate(instantaneousFlowRate, s->flowRate);
 }
 
 double decayedFlowRate(const unsigned long timeStart, const unsigned long timeEnd, const int dropsPerMillilitre, unsigned long period) {

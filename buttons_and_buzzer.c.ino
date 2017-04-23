@@ -25,9 +25,9 @@
 void evaluateFlowRate(struct MachineState *s) {
   if (s->sensorStatus == DROP_PASSING) {
     s->flowRate = flowRate(s);
-    s->previousTime = s->currentTime;
+    s->DisplayedFlowRate = s->flowRate;//ADDED TOGETHER WITH COMMENTED OUT SECTIONS
   }
-  s->DisplayedFlowRate = s->flowRate;//ADDED TOGETHER WITH COMMENTED OUT SECTIONS
+  
 //  if (s->currentTime >= s->previousTime + s->period) {
 //    s->flowRate =  decayedFlowRate(s->previousTime, s->currentTime, s->dropsPerMillilitre, s->period);
 //  }

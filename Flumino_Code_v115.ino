@@ -20,6 +20,8 @@ const int Button3InPin          = A3;
 const int Button4InPin          = 2;
 const int IROutPin              = 12;
 
+const int maximumDebouncePeriod = 20;
+
 Adafruit_SharpMem display(SCK, MOSI, SS);
 
 enum button_state {
@@ -55,22 +57,22 @@ struct MachineState {
   int lastButton1State            = 0;
   int button1Status               = BUTTON_UNTOUCHED;
   unsigned long button1HeldTime   = 0;
-  unsigned long button1PressedTime= 0;
+  unsigned long button1PressedTime = 0;
   int button2State                = 0;
   int lastButton2State            = 0;
   int button2Status               = BUTTON_UNTOUCHED;
   unsigned long button2HeldTime   = 0;
-  unsigned long button2PressedTime= 0;
+  unsigned long button2PressedTime = 0;
   int button3State                = 0;
   int lastButton3State            = 0;
   int button3Status               = BUTTON_UNTOUCHED;
   unsigned long button3HeldTime   = 0;
-  unsigned long button3PressedTime= 0;
+  unsigned long button3PressedTime = 0;
   int button4State                = 0;
   int lastButton4State            = 1;
   int button4Status               = BUTTON_UNTOUCHED;
   unsigned long button4HeldTime   = 0;
-  unsigned long button4PressedTime= 0;
+  unsigned long button4PressedTime = 0;
   int dropsPerMillilitreSelector  = 1;
   int inputDrugMassUOMSelector    = 0;
   int drugMassUgSelector          = 100;
@@ -123,6 +125,8 @@ void loop()
   evaluateBuzzer(&currentMachineState);
   printToScreen(&currentMachineState);
   saveState(&currentMachineState);
+  if(currentMachineState.sensorStatus == DROP_PASSING)
+  Serial.println(currentMachineState.DisplayedFlowRate);
 }
 
 void readStatus(struct MachineState *s) {
@@ -162,7 +166,13 @@ void buttonStatus(int *lastButtonState, int *buttonState, int *buttonStatus, int
 
 void sensorStatus(struct MachineState *s) {
   if (s -> lastSensorState >= SENSOR_THRESHOLD && s -> sensorState < SENSOR_THRESHOLD) {
-    s -> sensorStatus = DROP_PASSING;
+    s->period = s->currentTime - s->previousTime;
+    if (s->period < 100000) {
+      ;
+    }
+    else {
+      s -> sensorStatus = DROP_PASSING;
+    }
   }
   else {
     s -> sensorStatus = DROP_NOT_PASSING;
@@ -183,4 +193,5 @@ void readPins(struct MachineState *currentMachineState) {
   currentMachineState -> button2State = analogRead(Button2InPin);
   currentMachineState -> button3State = analogRead(Button3InPin);
   currentMachineState -> button4State = digitalRead(Button4InPin);
+  
 }
